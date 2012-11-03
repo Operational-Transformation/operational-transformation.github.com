@@ -6,16 +6,21 @@ import Control.Arrow ((>>>))
 import Hakyll
 
 main :: IO ()
-main = hakyll $ do
-  match "css/*" $ do
-    route   idRoute
+main = hakyllWith config $ do
+  match "src/css/*" $ do
+    route $ idRoute `composeRoutes` replaceSrc
     compile compressCssCompiler
-  match "static/bootstrap/css/bootstrap.min.css" $ do
-    route idRoute
+  match "src/static/bootstrap/css/bootstrap.min.css" $ do
+    route $ idRoute `composeRoutes` replaceSrc
     compile copyFileCompiler
-  match "templates/*" $ compile templateCompiler
-  match "*.rst" $ do
-    route   $ setExtension "html"
+  match "src/templates/*" $ compile templateCompiler
+  match "src/*.rst" $ do
+    route   $ replaceSrc `composeRoutes` setExtension "html"
     compile $ pageCompiler
-      >>> applyTemplateCompiler "templates/layout.hamlet"
+      >>> applyTemplateCompiler "src/templates/layout.hamlet"
       >>> relativizeUrlsCompiler
+  where
+    replaceSrc = gsubRoute "src/" (const "")
+    config = defaultHakyllConfiguration
+      { destinationDirectory = "."
+      }
