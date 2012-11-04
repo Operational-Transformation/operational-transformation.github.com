@@ -17,17 +17,24 @@
 <div class="container"><h1>Visualization of <abbr title="Operational Transformation">OT</abbr> with a central server</h1>
 <div class="container" id="wrapper">
   <footer>
-    Visualization <a rel="license" href="http://creativecommons.org/licenses/by/3.0/"><img alt="Creative Commons Lizenzvertrag" src="http://i.creativecommons.org/l/by/3.0/80x15.png"></img></a> <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Tim Baumann</span>. Fork me <a href="https://github.com/timjb/javascript-operational-transformation">on GitHub!</a>
+    Visualization <a rel="license" href="http://creativecommons.org/licenses/by/3.0/"><img alt="Creative Commons Lizenzvertrag" src="http://i.creativecommons.org/l/by/3.0/80x15.png"></img></a> <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Tim Baumann</span>. Fork me <a href="https://github.com/timjb/ot.js">on GitHub!</a>
   </footer>
 </div>
 
+<script src="./static/underscore/underscore.js"></script>
 <script src="./static/bootstrap/js/bootstrap-tooltip.js"></script>
 <script src="./static/bootstrap/js/bootstrap-popover.js"></script>
 <script src="./static/ot/dist/ot.js"></script>
 <script src="./static/d3/d3.v2.js"></script>
 <script src="./static/codemirror/lib/codemirror.js"></script>
 <script src="./static/ot/lib/server.js"></script>
-<script src="./visualization.js"></script>
+<script src="./js/visualization.js"></script>
+<script>
+$(document).ready(function () {
+  // Initialize Visualization
+  new Visualization("Lorem ipsum").insertBefore($('#wrapper footer'));
+});
+</script>
 </div>
 </body>
 </html>

@@ -1,3 +1,6 @@
+@aliceColor: #d45e12;
+@bobColor: #ca1171;
+
 h1 {
   margin-bottom: 16px;
 }
@@ -9,7 +12,6 @@ h1 {
 
 #server, .client {
   position: absolute;
-  z-index: 100;
   h2 {
     font-size: 28px; line-height: 42px; margin-top: -8px;
   }
@@ -31,7 +33,10 @@ h1 {
 
   .state {
     line-height: 24px;
-    span { white-space: nowrap; overflow: hidden; }
+    > span {
+      white-space: nowrap; overflow: hidden;
+      * { white-space: normal; }
+    }
   }
   .CodeMirror {
     background: #ffffff;
@@ -43,13 +48,17 @@ h1 {
   }
 }
 
-#alice { left: 0; }
-#bob { right: 0; }
+#alice {
+  left: 0;
+  h2 { color: @aliceColor; }
+}
+.operation.alice { background: @aliceColor; }
 
-#alice h2        { color:      #d45e12; }
-.operation.alice { background: #d45e12; }
-#bob h2          { color:      #ca1171; }
-.operation.bob   { background: #ca1171; }
+#bob {
+  right: 0;
+  h2 { color: @bobColor; }
+}
+.operation.bob { background: @bobColor; }
 
 
 .network-channel {
@@ -68,7 +77,7 @@ h1 {
     cursor: default;
   }
 
-  div {
+  .connection {
     position: absolute; left: 23px; top: 0; bottom: 0;
     border-left: 3px dashed #daedef;
   }
@@ -114,8 +123,13 @@ h1 {
 }
 
 
-.table-noheader tr:first-child td, .table-noheader tr:first-child th {
-  border-top: none;
+.table-noheader tr:first-child {
+  td, th { border-top: none; }
+}
+
+.popover {
+  width: 276px;
+  table { margin-bottom: 0; }
 }
 
 .op-retain { color: #3a3a3a; }
