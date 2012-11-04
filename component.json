@@ -1,0 +1,10 @@
+{
+  "name": "operational-transformation.github.com",
+  "dependencies": {
+    "ot": "0.0.10",
+    "jquery": "1.8.2",
+    "d3": "2.10.3",
+    "git://github.com/marijnh/CodeMirror.git": "git://github.com/marijnh/CodeMirror.git#2.35",
+    "bootstrap": "2.2.1"
+  }
+}
