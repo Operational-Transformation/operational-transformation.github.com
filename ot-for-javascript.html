@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8">
-<title>ot-for-javascript – OT Explained</title>
+<title>Operational Transformation in JavaScript – OT Explained</title>
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="./static/codemirror/lib/codemirror.css">
 <link reL="stylesheet" href="./css/visualization.css">
@@ -14,19 +14,18 @@
 </div>
 </div>
 </div>
-<div class="container"><h1>ot-for-javascript</h1>
-<h1 id="operational-transformation-in-javascript">Operational Transformation in JavaScript</h1>
-<h2 id="getting-started">Getting started</h2>
-<h3 id="node.js">Node.JS</h3>
+<div class="container"><h1>Operational Transformation in JavaScript</h1>
+<h1 id="getting-started">Getting started</h1>
+<h2 id="node.js">Node.JS</h2>
 <p>Install package with NPM:</p>
 <pre><code>$ npm install ot</code></pre>
 <p>Here’s how to include it:</p>
 <pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> ot = require(<span class="ch">'ot'</span>);</code></pre>
-<h3 id="browser">Browser</h3>
+<h2 id="browser">Browser</h2>
 <p>Download the <a href="https://raw.github.com/timjb/javascript-operational-transformation/master/dist/ot.js">combined script</a> that includes only the relevant parts for building a browser client or the <a href="https://raw.github.com/timjb/javascript-operational-transformation/master/dist/ot-min.js">minified script</a> for production.</p>
 <p>A single global variable <code>ot</code> is exported.</p>
 <p>The script has been tested on Chromium 17, Firefox 11 and Internet Explorer 9.</p>
-<h2 id="operation">Operation</h2>
+<h1 id="operation">Operation</h1>
 <p>Operational Transformation is a general technology that can work with many types of documents like drawings, rich-text documents and complex data structures. However, this library currently includes only operations on plain text documents. Here’s how you can create an operation:</p>
 <pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> operation = <span class="kw">new</span> <span class="kw">ot</span>.<span class="fu">Operation</span>(<span class="dv">0</span>)
   .<span class="fu">retain</span>(<span class="dv">11</span>)
@@ -100,7 +99,7 @@
 <span class="kw">var</span> inverse = <span class="kw">operation</span>.<span class="fu">invert</span>();
 <span class="kw">inverse</span>.<span class="fu">apply</span>(<span class="kw">operation</span>.<span class="fu">apply</span>(str)); <span class="co">// =&gt; &quot;lorem ipsum&quot;</span></code></pre>
 <p>This function comes in handy when implementing undo and redo stacks.</p>
-<h2 id="codemirror-integration">CodeMirror integration</h2>
+<h1 id="codemirror-integration">CodeMirror integration</h1>
 <p>Although this library can be extended to work with other editors like ACE from Cloud9 or simple textarea elements, it is intended to be used together with <a href="https://codemirror.net/">CodeMirror</a>. You can can listen for changes on the CodeMirror instance and convert them like this:</p>
 <pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> oldValue = <span class="st">&quot;lorem ipsum</span><span class="ch">\n</span><span class="st">dolor sit amet&quot;</span>;
 <span class="kw">var</span> n = <span class="dv">0</span>;
@@ -122,7 +121,7 @@
   .<span class="fu">retain</span>(<span class="dv">15</span>);
 <span class="kw">operation</span>.<span class="fu">applyToCodeMirror</span>(cm);</code></pre>
 <p>A call to this method will trigger the <code>onChange</code> callback. Therefore you have to be careful not to create infinite loops by applying an operation received from the server and sending it back to the server as if it was a change that the user has made.</p>
-<h2 id="server">Server</h2>
+<h1 id="server">Server</h1>
 <pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> server = <span class="kw">new</span> <span class="kw">ot</span>.<span class="fu">Server</span>(<span class="st">&quot;lorem ipsum&quot;</span>);
 <span class="kw">server</span>.<span class="fu">broadcast</span> = <span class="kw">function</span> (operation) {
   <span class="co">// you have to broadcast the operation to all connected</span>
@@ -133,7 +132,7 @@
 <span class="kw">function</span> onReceiveOperation (json) {
   <span class="kw">var</span> operation = <span class="kw">ot.Operation</span>.<span class="fu">fromJSON</span>(<span class="kw">JSON</span>.<span class="fu">parse</span>(json));
 }</code></pre>
-<h2 id="client">Client</h2>
+<h1 id="client">Client</h1>
 <pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> client = <span class="kw">new</span> <span class="kw">ot</span>.<span class="fu">Client</span>(<span class="dv">0</span>); <span class="co">// the client joins at revision 0</span>
 
 <span class="kw">client</span>.<span class="fu">applyOperation</span> = <span class="kw">function</span> (operation) {
@@ -161,7 +160,7 @@
   <span class="kw">var</span> operation = <span class="kw">ot.Operation</span>.<span class="fu">fromJSON</span>(<span class="kw">JSON</span>.<span class="fu">parse</span>(json));
   <span class="kw">client</span>.<span class="fu">applyServer</span>(operation);
 }</code></pre>
-<h2 id="feedback-and-questions">Feedback and questions</h2>
+<h1 id="feedback-and-questions">Feedback and questions</h1>
 <ul>
 <li>GitHub: <a href="https://github.com/timjb/javascript-operational-transformation">https://github.com/timjb/javascript-operational-transformation</a></li>
 <li>IRC: there’s a good chance I’m hanging out as timjb on #tree (that’s the channel of the <a href="https://github.com/garden/tree">Tree project</a>, a project using my library)</li>

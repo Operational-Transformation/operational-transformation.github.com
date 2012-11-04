@@ -1,5 +1,6 @@
-What is Operational Transformation?
-===================================
+---
+title: What is Operational Transformation?
+---
 
 
 Why Operational Transformation?

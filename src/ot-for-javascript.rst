@@ -1,5 +1,6 @@
-Operational Transformation in JavaScript
-========================================
+---
+title: Operational Transformation in JavaScript
+---
 
 Getting started
 ---------------

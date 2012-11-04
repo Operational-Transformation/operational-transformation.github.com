@@ -13,8 +13,8 @@ $(document).ready(function () {
       this.el.appendTo(el);
       return this;
     },
-    insertAfter: function (el) {
-      this.el.insertAfter(el);
+    insertBefore: function (el) {
+      this.el.insertBefore(el);
       return this;
     },
     $: function (sel) {
@@ -117,8 +117,8 @@ $(document).ready(function () {
 
   extend(Visualization.prototype, View);
 
-  Visualization.prototype.insertAfter = function (el) {
-    View.insertAfter.call(this, el);
+  Visualization.prototype.insertBefore = function (el) {
+    View.insertBefore.call(this, el);
     this.alice.cm.refresh();
     this.bob.cm.refresh();
     return this;
@@ -702,5 +702,5 @@ $(document).ready(function () {
 
   // Initialize Visualization
 
-  new Visualization("Lorem ipsum").insertAfter($('#wrapper h1'));
+  new Visualization("Lorem ipsum").insertBefore($('#wrapper footer'));
 });
