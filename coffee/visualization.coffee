@@ -253,7 +253,7 @@ class MyClient extends Client
       lineNumbers: true
       lineWrapping: true
       value: str
-    @cm.setOption 'onChange', (cm, change) =>
+    @cm.on 'change', (cm, change) =>
       unless @fromServer
         operation = new WrappedOperation(
           CodeMirrorAdapter.operationFromCodeMirrorChange(change, @oldValue),

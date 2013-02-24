@@ -1,21 +1,29 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<title>What is Operational Transformation? – OT Explained</title>
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="./static/codemirror/lib/codemirror.css">
-<link reL="stylesheet" href="./css/visualization.css">
-</head>
-<body><script src="./static/jquery/jquery.js"></script>
-<div class="navbar navbar-fixed-top navbar-inverse"><div class="navbar-inner"><div class="container"><a class="brand" href="./index.html">OT Explained</a>
-<ul class="nav"><li><a href="./what-is-ot.html">What is OT?</a></li>
-<li><a href="./ot-for-javascript.html">OT.js</a></li>
-<li><a href="./visualization.html">Visualization</a></li>
-</ul>
-</div>
-</div>
-</div>
-<div class="container"><h1>What is Operational Transformation?</h1>
-<h1 id="why-operational-transformation">Why Operational Transformation?</h1>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>#{title} – OT Explained</title>
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="./static/codemirror/lib/codemirror.css" />
+    <link reL="stylesheet" href="./css/visualization.css" />
+  </head>
+  <body>
+    <script src="./static/jquery/jquery.js"></script>
+    <div class="navbar navbar-fixed-top navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="./index.html">OT Explained</a>
+          <ul class="nav">
+            <li><a href="./what-is-ot.html">What is OT?</a></li>
+            <li><a href="./ot-for-javascript.html">OT.js</a></li>
+            <li><a href="./visualization.html">Visualization</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <h1>What is Operational Transformation?</h1>
+      <h1>Why Operational Transformation?</h1>
 <p>The problem that <a href="http://en.wikipedia.org/wiki/Operational_transformation">Operational Transformation (OT)</a> solves is the following: You want to work on a document, source code or drawing together with other users over the internet and want to see the edits of other users live. Your edits should appear instantaneous without a lag caused by network latency and multiple edits happening at the same time should not lead to divergent document states. This technology is used by many popular applications including:</p>
 <ul>
 <li><a href="http://www.codingmonkeys.de/subethaedit/">SubEthaEdit (code editor)</a></li>
@@ -23,13 +31,14 @@
 <li><a href="https://docs.google.com/">Google Docs</a></li>
 <li><a href="https://gomockingbird.com/">Mockingbird (tool for creating wireframes)</a></li>
 </ul>
-<h1 id="how-does-operational-transformation-work">How does Operational Transformation work?</h1>
+<h1>How does Operational Transformation work?</h1>
 <p>Here’s the short overview:</p>
 <ul>
 <li>Every change to a shared document is represented as an operation. In a text editor, this operation could be the insertion of the character ‘A’ at position 12. An operation can be applied to the current document resulting in a new document state.</li>
 <li>To handle concurrent operations, there is a function (usually called transform) that takes two operations that have been applied to the same document state (but on different clients) and computes a new operation that can be applied after the second operation and that preserves the first operation’s intended change. Let’s make this clear with an example: User A inserts the character ‘A’ at position 12 while user B inserts ‘B’ at the beginning at the document. The concurrent operations are therefore <code>insert(12, 'A')</code> and <code>insert(0, 'B')</code>. If we would simply send B’s operation to client A and applied it there, there is no problem. But if we send A’s operation to B and apply it after B’s operation has been applied, the character ‘A’ would be inserted one character one position left from the correct position. Moreover, after these operations, A’s document state and B’s document state wouldn’t be the same. Therefore, A’s operation <code>insert(12, 'A')</code> has to be transformed against B’s operation to take into account that B inserted a character before position 12 producing the operation <code>insert(13, 'A')</code>. This new operation can be applied on client B after B’s operation.</li>
 <li>This function can be used to build a client-server protocol that handles collaboration between any number of clients. This is explained in Daniel Spiewak’s excellent article <a href="http://www.codecommit.com/blog/java/understanding-and-applying-operational-transformation">Understanding and Applying Operational Transformation</a>.</li>
 </ul>
-<p>However, you don’t have to understand the details of Operational Transformation to use it with this library in your own project.</p></div>
-</body>
+<p>However, you don’t have to understand the details of Operational Transformation to use it with this library in your own project.</p>
+    </div>
+  </body>
 </html>

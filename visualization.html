@@ -1,26 +1,33 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<title>Visualization of <abbr title="Operational Transformation">OT</abbr> with a central server – OT Explained</title>
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="./static/codemirror/lib/codemirror.css">
-<link reL="stylesheet" href="./css/visualization.css">
-</head>
-<body><script src="./static/jquery/jquery.js"></script>
-<div class="navbar navbar-fixed-top navbar-inverse"><div class="navbar-inner"><div class="container"><a class="brand" href="./index.html">OT Explained</a>
-<ul class="nav"><li><a href="./what-is-ot.html">What is OT?</a></li>
-<li><a href="./ot-for-javascript.html">OT.js</a></li>
-<li><a href="./visualization.html">Visualization</a></li>
-</ul>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>#{title} – OT Explained</title>
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="./static/codemirror/lib/codemirror.css" />
+    <link reL="stylesheet" href="./css/visualization.css" />
+  </head>
+  <body>
+    <script src="./static/jquery/jquery.js"></script>
+    <div class="navbar navbar-fixed-top navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="./index.html">OT Explained</a>
+          <ul class="nav">
+            <li><a href="./what-is-ot.html">What is OT?</a></li>
+            <li><a href="./ot-for-javascript.html">OT.js</a></li>
+            <li><a href="./visualization.html">Visualization</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <h1>Visualization of <abbr title="Operational Transformation">OT</abbr> with a central server</h1>
+      <div class="container" id="wrapper">
+<footer>
+Visualization <a href="http://creativecommons.org/licenses/by/3.0/"><img src="http://i.creativecommons.org/l/by/3.0/80x15.png" alt="Creative Commons Lizenzvertrag" /></a> <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Tim Baumann</span>. Fork me <a href="https://github.com/timjb/ot.js">on GitHub!</a>
+</footer>
 </div>
-</div>
-</div>
-<div class="container"><h1>Visualization of <abbr title="Operational Transformation">OT</abbr> with a central server</h1>
-<div class="container" id="wrapper">
-  <footer>
-    Visualization <a rel="license" href="http://creativecommons.org/licenses/by/3.0/"><img alt="Creative Commons Lizenzvertrag" src="http://i.creativecommons.org/l/by/3.0/80x15.png"></img></a> <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Tim Baumann</span>. Fork me <a href="https://github.com/timjb/ot.js">on GitHub!</a>
-  </footer>
-</div>
-
 <script src="./static/underscore/underscore.js"></script>
 <script src="./static/bootstrap/js/bootstrap-tooltip.js"></script>
 <script src="./static/bootstrap/js/bootstrap-popover.js"></script>
@@ -35,6 +42,6 @@ $(document).ready(function () {
   new Visualization("Lorem ipsum").insertBefore($('#wrapper footer'));
 });
 </script>
-</div>
-</body>
+    </div>
+  </body>
 </html>

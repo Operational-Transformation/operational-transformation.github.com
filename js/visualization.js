@@ -338,7 +338,7 @@
         lineWrapping: true,
         value: str
       });
-      this.cm.setOption('onChange', function(cm, change) {
+      this.cm.on('change', function(cm, change) {
         var operation;
         if (!_this.fromServer) {
           operation = new WrappedOperation(CodeMirrorAdapter.operationFromCodeMirrorChange(change, _this.oldValue), {
