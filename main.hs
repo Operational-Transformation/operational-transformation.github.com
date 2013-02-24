@@ -5,15 +5,17 @@ module Main where
 import Control.Arrow ((>>>))
 import Data.String (fromString)
 import Hakyll
+import Data.Default (Default (..))
+import Text.Pandoc.Options (ReaderOptions (..))
 
 main :: IO ()
 main = hakyllWith config $ do
   match "less/*.less" $ do
     route $ setExtension "css" `composeRoutes` gsubRoute "less/" (const "css/")
-    compile $ getResourceString >>> unixFilter "lessc" ["--compress", "-"]
+    compile $ getResourceLBS >>= withItemBody (unixFilterLBS "lessc" ["--compress", "-"])
   match "coffee/*.coffee" $ do
     route $ setExtension "js" `composeRoutes` gsubRoute "coffee/" (const "js/")
-    compile $ getResourceString >>> unixFilter "coffee" ["--stdio", "--print"]
+    compile $ getResourceLBS >>= withItemBody (unixFilterLBS "coffee" ["--stdio", "--print"])
   match "templates/*" $ compile templateCompiler
   let components = map (fromString . ("components/" ++))
         [ "jquery/jquery.js"
@@ -26,25 +28,28 @@ main = hakyllWith config $ do
         , "bootstrap/js/bootstrap-tooltip.js"
         , "bootstrap/js/bootstrap-popover.js"
         ]
-  match (list components) $ do
+  match (fromList components) $ do
     route $ gsubRoute "components/" (const "static/")
     compile copyFileCompiler
   match "src/*.rst" $ do
     route   $ replaceSrc `composeRoutes` setExtension "html"
-    compile $ pageCompiler
-      >>> applyTemplateCompiler "templates/layout.hamlet"
-      >>> relativizeUrlsCompiler
+    compile $ do
+      tpl <- loadBody "templates/layout.html"
+      pandocCompiler
+        >>= applyTemplate tpl defaultContext
+        >>= relativizeUrls
   match "src/*.js" $ do
     route replaceSrc
     compile copyFileCompiler
   match "src/*.html" $ do
     route replaceSrc
-    compile $ readPageCompiler
-      >>> addDefaultFields
-      >>> applyTemplateCompiler "templates/layout.hamlet"
-      >>> relativizeUrlsCompiler
+    compile $ do
+      tpl <- loadBody "templates/layout.html"
+      pandocCompilerWith (def { readerParseRaw = True }) def
+        >>= applyTemplate tpl defaultContext
+        >>= relativizeUrls
   where
     replaceSrc = gsubRoute "src/" (const "")
-    config = defaultHakyllConfiguration
+    config = defaultConfiguration
       { destinationDirectory = "."
       }
