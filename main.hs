@@ -31,7 +31,7 @@ main = hakyllWith config $ do
   match (fromList components) $ do
     route $ gsubRoute "components/" (const "static/")
     compile copyFileCompiler
-  match "src/*.rst" $ do
+  match "src/*.markdown" $ do
     route   $ replaceSrc `composeRoutes` setExtension "html"
     compile $ do
       tpl <- loadBody "templates/layout.html"
