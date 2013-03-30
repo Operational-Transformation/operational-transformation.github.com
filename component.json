@@ -2,10 +2,10 @@
   "name": "operational-transformation.github.com",
   "dependencies": {
     "jquery": "1.9.1",
-    "d3": "3.0.6",
+    "d3": "3.1.4",
     "underscore": "1.4.4",
-    "bootstrap": "2.3.0",
+    "bootstrap": "2.3.1",
     "ot": "git://github.com/Operational-Transformation/ot.js#~0.0.11",
-    "codemirror": "http://codemirror.net/codemirror-3.1.zip"
+    "codemirror": "http://codemirror.net/codemirror-3.11.zip"
   }
 }
