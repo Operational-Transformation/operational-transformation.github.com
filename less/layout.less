@@ -4,6 +4,23 @@ body {
   padding: 40px 0 0;
 }
 
+.op-retain { color: #3a3a3a; }
+.op-insert { color: #1a7324; }
+.op-delete { color: #ce1b0f; }
+
+.demo { margin: 20px 0; }
+
+.well .CodeMirror { border: 1px solid #d3d3d3; }
+
+#operations-demo {
+  .CodeMirror { height: 200px; }
+  .operations {
+    height: 200px;
+    overflow-y: scroll;
+    ul { list-style: none; margin: 0; }
+  }
+}
+
 /* Loosely based on pygment's default colors */
 table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode, table.sourceCode pre
    { margin: 0; padding: 0; border: 0; vertical-align: baseline; border: none; }

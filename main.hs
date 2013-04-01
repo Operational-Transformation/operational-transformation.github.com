@@ -25,6 +25,7 @@ main = hakyllWith config $ do
         , "d3/d3.v2.js"
         , "ot/dist/ot.js"
         , "ot/lib/server.js"
+        , "ot/lib/simple-text-operation.js"
         , "bootstrap/js/bootstrap-tooltip.js"
         , "bootstrap/js/bootstrap-popover.js"
         ]
