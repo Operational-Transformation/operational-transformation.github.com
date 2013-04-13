@@ -16,6 +16,8 @@ Install package with NPM:
 
 Here's how to include it:
 
+<!-- TODO: usage with bower -->
+
 ~~~javascript
     var ot = require('ot');
 ~~~
@@ -23,11 +25,13 @@ Here's how to include it:
 
 ### Browser
 
-Download the [combined script](https://raw.github.com/timjb/javascript-operational-transformation/master/dist/ot.js) that includes only the relevant parts for building a browser client or the [minified script](https://raw.github.com/timjb/javascript-operational-transformation/master/dist/ot-min.js) for production.
+Download the [combined script](https://raw.github.com/Operational-Transformation/ot.js/master/dist/ot.js) that includes only the relevant parts for building a browser client or the [minified script](https://raw.github.com/Operational-Transformation/ot.js/master/dist/ot-min.js) for production.
 
 A single global variable ``ot`` is exported.
 
+<!--
 The script has been tested on Chromium 17, Firefox 11 and Internet Explorer 9.
+-->
 
 
 Operation
@@ -36,7 +40,7 @@ Operation
 Operational Transformation is a general technology that can work with many types of documents like drawings, rich-text documents and complex data structures. However, this library currently includes only operations on plain text documents. Here's how you can create an operation:
 
 ~~~javascript
-var operation = new ot.Operation(0)
+var operation = new ot.Operation()
   .retain(11)
   .insert(" dolor");
 ~~~
@@ -67,27 +71,21 @@ operation.targetLength // => 22
 But not every string of the correct length can be used as an operation as an input string. There's another rule that's used to make sure that an operation is correct. Delete components store the deleted characters instead of the number of deleted characters. When a delete component is applied, the stored characters must match the next characters in the input string.
 
 ~~~javascript
-var operation = new ot.Operation(0) // create new operation
+var operation = new ot.Operation() // create new operation
   .delete("lorem ")
   .retain(5);
 operation.apply("lorem ipsum"); // => "ipsum"
 operation.apply("trolo ipsum"); // throws an error
 ~~~
 
-There's a little thing that I've glossed over because it wasn't relevant so far. The constructor ``ot.Operation`` takes one integer argument. This is called the revision number:
-
-~~~javascript
-operation.revision; // => 0
-~~~
-
-Two operations that happened after each other must have consecutive revision numbers. The way we have defined operations (any numbers of components instead of simple commands to insert or delete characters at a specified position) has one additional advantage: Two operations can be composed into one operation that includes the changes of both operations:
+The way we have defined operations (any numbers of components instead of simple commands to insert or delete characters at a specified position) has one additional advantage: Two operations can be composed into one operation that includes the changes of both operations:
 
 ~~~javascript
 // Define two consecutive operations
-var operation0 = new ot.Operation(0)
+var operation0 = new ot.Operation()
   .retain(11)
   .insert(" dolor");
-var operation1 = new ot.Operation(1)
+var operation1 = new ot.Operation()
   .delete("lorem ")
   .retain(11);
 
@@ -110,13 +108,13 @@ In this example, the user appended the characters " dolor" first and then delete
 var str = "lorem ipsum";
 
 // User A appends the string " dolor"
-var operationA = new ot.Operation(0)
+var operationA = new ot.Operation()
   .retain(11)
   .insert(" dolor");
 var strA = operationA.apply(str); // "lorem ipsum dolor"
 
 // User B deletes the string "lorem " at the beginning
-var operationB = new ot.Operation(0)
+var operationB = new ot.Operation()
   .delete("lorem ")
   .retain(5);
 var strB = operationB.apply(str); // "ipsum";
@@ -133,11 +131,12 @@ var strABPrime = operationAPrime.apply(strB); // "ipsum dolor"
 var strBAPrime = operationBPrime.apply(strA); // "ipsum dolor"
 ~~~
 
+<!--
 There is one additional method available on operations: ``invert`` returns a new operation that reverts all changes of a given operation. For example:
 
 ~~~javascript
 var str = "lorem ipsum";
-var operation = new ot.Operation(0)
+var operation = new ot.Operation()
   .delete("lorem ")
   .retain(5);
 operation.apply(str); // => "ipsum"
@@ -146,8 +145,10 @@ inverse.apply(operation.apply(str)); // => "lorem ipsum"
 ~~~
 
 This function comes in handy when implementing undo and redo stacks.
+-->
 
 
+<!--
 CodeMirror integration
 ----------------------
 
@@ -155,12 +156,11 @@ Although this library can be extended to work with other editors like ACE from C
 
 ~~~javascript
 var oldValue = "lorem ipsum\ndolor sit amet";
-var n = 0;
 var wrapper = document.getElementById('wrapper');
 var cm = CodeMirror(wrapper, {
   value: oldValue,
   onChange: function (cm, change) {
-    var operation = new ot.Operation(n++).fromCodeMirrorChange(change, oldValue);
+    var operation = new ot.Operation().fromCodeMirrorChange(change, oldValue);
     // do something with the operation here, like logging it
     // or sending it to the server
     oldValue = cm.getValue();
@@ -173,7 +173,7 @@ You have to call the method `fromCodeMirrorChange` with a [CodeMirror change obj
 The method ``applyToCodeMirror`` applies an operation to a CodeMirror instance. Theoretically, it is not strictly necessary, because you could simply get the current value from the editor, apply the operation and set the new value. However, this approach has several disadvantages. Firstly, CodeMirror needs to rebuild it's internal datastructures, a substantial amount of CodeMirror's DOM tree needs to be rerendered and syntax highlighting needs to start from the beginning of the document. Secondly, the user's current cursor position is lost. Here's how you can use it:
 
 ~~~javascript
-var operation = new ot.Operation(0)
+var operation = new ot.Operation()
   .retain(6)
   .delete(" ipsum")
   .retain(15);
@@ -181,6 +181,7 @@ operation.applyToCodeMirror(cm);
 ~~~
 
 A call to this method will trigger the ``onChange`` callback. Therefore you have to be careful not to create infinite loops by applying an operation received from the server and sending it back to the server as if it was a change that the user has made.
+-->
 
 
 Server
@@ -238,5 +239,9 @@ Feedback and questions
 ----------------------
 
 * GitHub: https://github.com/timjb/javascript-operational-transformation
-* IRC: there's a good chance I'm hanging out as timjb on #tree (that's the channel of the `Tree project <https://github.com/garden/tree>`_, a project using my library)
 * Email: `tim@timbaumann.info <mailto:tim@timbaumann.info>`_
+
+<!--
+* IRC: there's a good chance I'm hanging out as timjb on #tree (that's the channel of the `Tree project <https://github.com/garden/tree>`_, a project using my library)
+-->
+
