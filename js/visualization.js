@@ -320,7 +320,6 @@
       this.fromServer = false;
       this.serverStatePoint = this.clientStatePoint = new DiamondPoint(0, 0);
       this.edges = [];
-      this.oldValue = str;
       self = this;
       this.el = $('<div class="well client" />').popover({
         selector: '.operation',
@@ -341,14 +340,13 @@
       this.cm.on('change', function(cm, change) {
         var operation;
         if (!_this.fromServer) {
-          operation = new WrappedOperation(CodeMirrorAdapter.operationFromCodeMirrorChange(change, _this.oldValue), {
+          operation = new WrappedOperation(CodeMirrorAdapter.operationFromCodeMirrorChange(change, _this.cm)[0], {
             creator: _this.name,
             id: _.uniqueId('operation')
           });
           console.log(change, operation);
-          _this.applyClient(operation);
+          return _this.applyClient(operation);
         }
-        return _this.oldValue = _this.cm.getValue();
       });
       cmWrapper.detach().appendTo(this.el);
       this.initD3();

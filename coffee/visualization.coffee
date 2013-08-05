@@ -229,7 +229,6 @@ class MyClient extends Client
     @fromServer = false
     @serverStatePoint = @clientStatePoint = new DiamondPoint(0, 0)
     @edges = []
-    @oldValue = str
 
     self = @
     @el = $('<div class="well client" />')
@@ -256,12 +255,11 @@ class MyClient extends Client
     @cm.on 'change', (cm, change) =>
       unless @fromServer
         operation = new WrappedOperation(
-          CodeMirrorAdapter.operationFromCodeMirrorChange(change, @oldValue),
+          CodeMirrorAdapter.operationFromCodeMirrorChange(change, @cm)[0],
           { creator: @name, id: _.uniqueId('operation') }
         )
         console.log(change, operation)
         @applyClient(operation)
-      @oldValue = @cm.getValue()
     cmWrapper.detach().appendTo(@el)
 
     @initD3()
