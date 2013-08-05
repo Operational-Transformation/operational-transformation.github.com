@@ -17,20 +17,20 @@ main = hakyllWith config $ do
     route $ setExtension "js" `composeRoutes` gsubRoute "coffee/" (const "js/")
     compile $ getResourceLBS >>= withItemBody (unixFilterLBS "coffee" ["--stdio", "--print"])
   match "templates/*" $ compile templateCompiler
-  let components = map (fromString . ("components/" ++))
+  let components = map (fromString . ("bower_components/" ++))
         [ "jquery/jquery.js"
         , "underscore/underscore.js"
         , "codemirror/lib/codemirror.css"
         , "codemirror/lib/codemirror.js"
-        , "d3/d3.v2.js"
+        , "d3/d3.js"
         , "ot/dist/ot.js"
         , "ot/lib/server.js"
         , "ot/lib/simple-text-operation.js"
-        , "bootstrap/js/bootstrap-tooltip.js"
-        , "bootstrap/js/bootstrap-popover.js"
+        , "bootstrap/js/tooltip.js"
+        , "bootstrap/js/popover.js"
         ]
   match (fromList components) $ do
-    route $ gsubRoute "components/" (const "static/")
+    route $ gsubRoute "bower_components/" (const "static/")
     compile copyFileCompiler
   match "src/*.markdown" $ do
     route   $ replaceSrc `composeRoutes` setExtension "html"

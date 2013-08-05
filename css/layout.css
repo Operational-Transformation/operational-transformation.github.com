@@ -540,9 +540,10 @@ th.visible-print,td.visible-print{display:none !important;}
 .op-insert{color:#1a7324;}
 .op-delete{color:#ce1b0f;}
 .demo{margin:20px 0;}
+.CodeMirror,.CodeMirror>*{-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box;}
 .well .CodeMirror{border:1px solid #d3d3d3;}
 #operations-demo .CodeMirror{height:200px;}
-#operations-demo .operations{height:200px;overflow-y:scroll;}#operations-demo .operations ul{list-style:none;margin:0;}
+#operations-demo .operations{height:200px;overflow-y:scroll;}#operations-demo .operations ul{list-style:none;margin:0;padding:0;}
 table.sourceCode,tr.sourceCode,td.lineNumbers,td.sourceCode,table.sourceCode pre{margin:0;padding:0;border:0;vertical-align:baseline;border:none;}
 td.lineNumbers{border-right:1px solid #AAAAAA;text-align:right;color:#AAAAAA;padding-right:5px;padding-left:5px;}
 td.sourceCode{padding-left:5px;}

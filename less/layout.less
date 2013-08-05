@@ -10,6 +10,13 @@ body {
 
 .demo { margin: 20px 0; }
 
+/* unlike Bootstrap, CodeMirror uses the traditional box model */
+.CodeMirror, .CodeMirror > * {
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
 .well .CodeMirror { border: 1px solid #d3d3d3; }
 
 #operations-demo {
@@ -17,7 +24,7 @@ body {
   .operations {
     height: 200px;
     overflow-y: scroll;
-    ul { list-style: none; margin: 0; }
+    ul { list-style: none; margin: 0; padding: 0; }
   }
 }
 
