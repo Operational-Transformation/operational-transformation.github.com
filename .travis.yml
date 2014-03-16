@@ -8,6 +8,8 @@ env:
 install:
   - cabal install
 before_script:
+  - npm install -g coffee less bower
+  - bower install
   - cd _site
   - node --version
   - git checkout master
@@ -18,7 +20,7 @@ after_script:
   - cd _site
   - git status
   - git add --all
-  - git confiug --global user.email "tim@timbaumann.info"
+  - git config --global user.email "tim@timbaumann.info"
   - git config --global user.name "Travis"
   - git commit -m "snapshot $(date '+%m/%d/%y %H:%M')"
   - git push "https://timjb:$MY_PASS@github.com/operational-transformation/operational-transformation.github.com.git" master | grep -v http
