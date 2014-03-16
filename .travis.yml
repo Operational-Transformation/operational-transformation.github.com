@@ -8,10 +8,9 @@ env:
 install:
   - cabal install
 before_script:
-  - npm install -g coffee less bower
+  - npm install -g coffee-script less bower
   - bower install
   - cd _site
-  - node --version
   - git checkout master
   - git pull origin master
   - cd ..
