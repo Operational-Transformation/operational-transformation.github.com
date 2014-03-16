@@ -18,6 +18,7 @@ before_script:
 script: ./dist/build/ot-site/ot-site build
 after_script:
   - cd _site
+  - cp ../.travis.yml .
   - git status
   - git add --all
   - git config --global user.email "tim@timbaumann.info"
