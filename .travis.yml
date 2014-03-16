@@ -11,7 +11,7 @@ before_script:
   - npm install -g coffee less bower
   - bower install
   - cd _site
-  - node --version
+  - coffee --version
   - git checkout master
   - git pull origin master
   - cd ..
