@@ -9,7 +9,7 @@ import Data.Default (Default (..))
 import Text.Pandoc.Options (ReaderOptions (..))
 
 main :: IO ()
-main = hakyllWith config $ do
+main = hakyll $ do
   match "less/*.less" $ do
     route $ setExtension "css" `composeRoutes` gsubRoute "less/" (const "css/")
     compile $ getResourceLBS >>= withItemBody (unixFilterLBS "lessc" ["--compress", "-"])
@@ -51,6 +51,3 @@ main = hakyllWith config $ do
         >>= relativizeUrls
   where
     replaceSrc = gsubRoute "src/" (const "")
-    config = defaultConfiguration
-      { destinationDirectory = "."
-      }
