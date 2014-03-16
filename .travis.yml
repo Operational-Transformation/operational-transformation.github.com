@@ -1,0 +1,28 @@
+language: haskell
+branches:
+  only:
+    - source
+env:
+  global:
+    - secure: "PwWsyATRkgTZ6S7s3iFw6xdSh4SyXtL8dkBSqzmZNqAoAMKBs8JmpKZjeGxbEWauHQcuO7YBq0eppQzQAK3s6dJtCSnmkxeM4jxS9NMkXYYvj0fkLUHMzlmwH03PIwCq1S+kc7tb1fqfEOS5Lscx43S+IbT2oUf7V3La7tzQaDA="
+install:
+  - cabal install
+before_script:
+  - npm install -g coffee less bower
+  - bower install
+  - cd _site
+  - node --version
+  - git checkout master
+  - git pull origin master
+  - cd ..
+script: ./dist/build/ot-site/ot-site build
+after_script:
+  - cd _site
+  - cp ../.travis.yml .
+  - git status
+  - git add --all
+  - git config --global user.email "tim@timbaumann.info"
+  - git config --global user.name "Travis"
+  - git commit -m "snapshot $(date '+%m/%d/%y %H:%M')"
+  - git push "https://timjb:$MY_PASS@github.com/operational-transformation/operational-transformation.github.com.git" master | grep -v http
+  - cd ..
