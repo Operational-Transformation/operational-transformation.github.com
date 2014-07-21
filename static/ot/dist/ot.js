@@ -1,9 +1,9 @@
 /*
  *    /\
- *   /  \ ot 0.0.12
+ *   /  \ ot 0.0.14
  *  /    \ http://operational-transformation.github.com
  *  \    /
- *   \  / (c) 2012-2013 Tim Baumann <tim@timbaumann.info> (http://timbaumann.info)
+ *   \  / (c) 2012-2014 Tim Baumann <tim@timbaumann.info> (http://timbaumann.info)
  *    \/ ot may be freely distributed under the MIT license.
  */
 
@@ -547,22 +547,57 @@ ot.Cursor = (function (global) {
 
   var TextOperation = global.ot ? global.ot.TextOperation : require('./text-operation');
 
-  // A cursor has a `position` and a `selectionEnd`. Both are zero-based indexes
-  // into the document. When nothing is selected, `selectionEnd` is equal to
-  // `position`. When there is a selection, `position` is always the side of the
-  // selection that would move if you pressed an arrow key.
-  function Cursor (position, selectionEnd) {
+  // A cursor has a `position` and a `selection`. The property `position` is a
+  // zero-based index into the document and `selection` an array of Range
+  // objects (see below). When nothing is selected, the array is empty.
+  function Cursor (position, selection) {
     this.position = position;
-    this.selectionEnd = selectionEnd;
+
+    var filteredSelection = [];
+    for (var i = 0; i < selection.length; i++) {
+      if (!selection[i].isEmpty()) { filteredSelection.push(selection[i]); }
+    }
+    this.selection = filteredSelection;
   }
 
+  // Range has `anchor` and `head` properties, which are zero-based indices into
+  // the document. The `anchor` is the side of the selection that stays fixed,
+  // `head` is the side of the selection where the cursor is.
+  function Range (anchor, head) {
+    this.anchor = anchor;
+    this.head = head;
+  }
+
+  Cursor.Range = Range;
+
+  Range.fromJSON = function (obj) {
+    return new Range(obj.anchor, obj.head);
+  };
+
+  Range.prototype.equals = function (other) {
+    return this.anchor === other.anchor && this.head === other.head;
+  };
+
+  Range.prototype.isEmpty = function () {
+    return this.anchor === this.head;
+  };
+
   Cursor.fromJSON = function (obj) {
-    return new Cursor(obj.position, obj.selectionEnd);
+    var selection = [];
+    for (var i = 0; i < obj.selection.length; i++) {
+      selection[i] = Range.fromJSON(obj.selection[i]);
+    }
+    return new Cursor(obj.position, selection);
   };
 
   Cursor.prototype.equals = function (other) {
-    return this.position === other.position &&
-      this.selectionEnd === other.selectionEnd;
+    if (this.position !== other.position) { return false; }
+    if (this.selection.length !== other.selection.length) { return false; }
+    // FIXME: Sort ranges before comparing them?
+    for (var i = 0; i < this.selection.length; i++) {
+      if (!this.selection[i].equals(other.selection[i])) { return false; }
+    }
+    return true;
   };
 
   // Return the more current cursor information.
@@ -590,10 +625,15 @@ ot.Cursor = (function (global) {
     }
 
     var newPosition = transformIndex(this.position);
-    if (this.position === this.selectionEnd) {
-      return new Cursor(newPosition, newPosition);
+
+    var newSelection = [];
+    for (var i = 0; i < this.selection.length; i++) {
+      var range = this.selection[i];
+      var newRange = new Range(transformIndex(range.anchor), transformIndex(range.head));
+      if (!newRange.isEmpty()) { newSelection.push(newRange); }
     }
-    return new Cursor(newPosition, transformIndex(this.selectionEnd));
+
+    return new Cursor(newPosition, newSelection);
   };
 
   return Cursor;
@@ -1002,7 +1042,7 @@ if (typeof module === 'object') {
 
 /*global ot */
 
-ot.CodeMirrorAdapter = (function () {
+ot.CodeMirrorAdapter = (function (global) {
   'use strict';
 
   var TextOperation = ot.TextOperation;
@@ -1016,7 +1056,12 @@ ot.CodeMirrorAdapter = (function () {
     bind(this, 'onCursorActivity');
     bind(this, 'onFocus');
     bind(this, 'onBlur');
-    cm.on('change', this.onChange);
+
+    if (global.CodeMirror && /^4\./.test(global.CodeMirror.version)) {
+      cm.on('changes', this.onChange);
+    } else {
+      cm.on('change', this.onChange);
+    }
     cm.on('cursorActivity', this.onCursorActivity);
     cm.on('focus', this.onFocus);
     cm.on('blur', this.onBlur);
@@ -1024,6 +1069,7 @@ ot.CodeMirrorAdapter = (function () {
 
   // Removes all event listeners from the CodeMirror instance.
   CodeMirrorAdapter.prototype.detach = function () {
+    this.cm.off('changes', this.onChange);
     this.cm.off('change', this.onChange);
     this.cm.off('cursorActivity', this.onCursorActivity);
     this.cm.off('focus', this.onFocus);
@@ -1040,14 +1086,19 @@ ot.CodeMirrorAdapter = (function () {
   function posEq (a, b) { return cmpPos(a, b) === 0; }
   function posLe (a, b) { return cmpPos(a, b) <= 0; }
 
+  function minPos (a, b) { return posLe(a, b) ? a : b; }
+  function maxPos (a, b) { return posLe(a, b) ? b : a; }
+
   function codemirrorDocLength (doc) {
     return doc.indexFromPos({ line: doc.lastLine(), ch: 0 }) +
       doc.getLine(doc.lastLine()).length;
   }
 
-  // Converts a CodeMirror change object into a TextOperation and its inverse
-  // and returns them as a two-element array.
-  CodeMirrorAdapter.operationFromCodeMirrorChange = function (change, doc) {
+  // Converts a CodeMirror change array (as obtained from the 'changes' event
+  // in CodeMirror v4) or single change or linked list of changes (as returned
+  // by the 'change' event in CodeMirror prior to version 4) into a
+  // TextOperation and its inverse and returns them as a two-element array.
+  CodeMirrorAdapter.operationFromCodeMirrorChanges = function (changes, doc) {
     // Approach: Replay the changes, beginning with the most recent one, and
     // construct the operation and its inverse. We have to convert the position
     // in the pre-change coordinate system to an index. We have a method to
@@ -1059,10 +1110,15 @@ ot.CodeMirrorAdapter = (function () {
     // A disadvantage of this approach is its complexity `O(n^2)` in the length
     // of the linked list of changes.
 
-    var changes = [], i = 0;
-    while (change) {
-      changes[i++] = change;
-      change = change.next;
+    // Handle single change objects and linked lists of change objects.
+    var changeArray, i = 0;
+    if (typeof changes.from === 'object') {
+      changeArray = [];
+      while (changes) {
+        changeArray[i++] = changes;
+        changes = changes.next;
+      }
+      changes = changeArray;
     }
 
     var docEndLength = codemirrorDocLength(doc);
@@ -1105,7 +1161,7 @@ ot.CodeMirrorAdapter = (function () {
     }
 
     for (i = changes.length - 1; i >= 0; i--) {
-      change = changes[i];
+      var change = changes[i];
       indexFromPos = updateIndexFromPos(indexFromPos, change);
 
       var fromIndex = indexFromPos(change.from);
@@ -1130,6 +1186,10 @@ ot.CodeMirrorAdapter = (function () {
 
     return [operation, inverse];
   };
+
+  // Singular form for backwards compatibility.
+  CodeMirrorAdapter.operationFromCodeMirrorChange =
+    CodeMirrorAdapter.operationFromCodeMirrorChanges;
 
   // Apply an operation to a CodeMirror instance.
   CodeMirrorAdapter.applyOperationToCodeMirror = function (operation, cm) {
@@ -1156,9 +1216,9 @@ ot.CodeMirrorAdapter = (function () {
     this.callbacks = cb;
   };
 
-  CodeMirrorAdapter.prototype.onChange = function (_, change) {
+  CodeMirrorAdapter.prototype.onChange = function (_, changes) {
     if (!this.ignoreNextChange) {
-      var pair = CodeMirrorAdapter.operationFromCodeMirrorChange(change, this.cm);
+      var pair = CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, this.cm);
       this.trigger('change', pair[0], pair[1]);
     }
     this.ignoreNextChange = false;
@@ -1181,23 +1241,33 @@ ot.CodeMirrorAdapter = (function () {
     var cm = this.cm;
     var cursorPos = cm.getCursor();
     var position = cm.indexFromPos(cursorPos);
-    var selectionEnd;
-    if (cm.somethingSelected()) {
-      var startPos = cm.getCursor(true);
-      var selectionEndPos = posEq(cursorPos, startPos) ? cm.getCursor(false) : startPos;
-      selectionEnd = cm.indexFromPos(selectionEndPos);
-    } else {
-      selectionEnd = position;
+
+    var selectionList = cm.listSelections();
+    var selection = [];
+    for (var i = 0; i < selectionList.length; i++) {
+      selection[i] = new Cursor.Range(
+        cm.indexFromPos(selectionList[i].anchor),
+        cm.indexFromPos(selectionList[i].head)
+      );
     }
 
-    return new Cursor(position, selectionEnd);
+    return new Cursor(position, selection);
   };
 
   CodeMirrorAdapter.prototype.setCursor = function (cursor) {
-    this.cm.setSelection(
-      this.cm.posFromIndex(cursor.position),
-      this.cm.posFromIndex(cursor.selectionEnd)
-    );
+    var position = this.cm.posFromIndex(cursor.position);
+    if (cursor.selection.length === 0) {
+      this.cm.setCursor(position);
+    } else {
+      var primary = null;
+      var ranges = [];
+      for (var i = 0; i < cursor.selection.length; i++) {
+        var range = cursor.selection[i];
+        if (range.head === position) { primary = i; }
+        ranges[i] = { anchor: range.anchor, head: range.head };
+      }
+      this.cm.setSelections(ranges, primary);
+    }
   };
 
   var addStyleRule = (function () {
@@ -1215,7 +1285,7 @@ ot.CodeMirrorAdapter = (function () {
 
   CodeMirrorAdapter.prototype.setOtherCursor = function (cursor, color, clientId) {
     var cursorPos = this.cm.posFromIndex(cursor.position);
-    if (cursor.position === cursor.selectionEnd) {
+    if (cursor.selection.length === 0) {
       // show cursor
       var cursorCoords = this.cm.cursorCoords(cursorPos);
       var cursorEl = document.createElement('pre');
@@ -1243,17 +1313,24 @@ ot.CodeMirrorAdapter = (function () {
       var rule = '.' + selectionClassName + ' { background: ' + color + '; }';
       addStyleRule(rule);
 
-      var fromPos, toPos;
-      if (cursor.selectionEnd > cursor.position) {
-        fromPos = cursorPos;
-        toPos = this.cm.posFromIndex(cursor.selectionEnd);
-      } else {
-        fromPos = this.cm.posFromIndex(cursor.selectionEnd);
-        toPos = cursorPos;
+      var selectionObjects = [];
+      for (var i = 0; i < cursor.selection.length; i++) {
+        var anchorPos = this.cm.posFromIndex(cursor.selection[i].anchor);
+        var headPos   = this.cm.posFromIndex(cursor.selection[i].head);
+        selectionObjects[i] = this.cm.markText(
+          minPos(anchorPos, headPos),
+          maxPos(anchorPos, headPos),
+          { className: selectionClassName }
+        );
       }
-      return this.cm.markText(fromPos, toPos, {
-        className: selectionClassName
-      });
+
+      return {
+        clear: function () {
+          for (var i = 0; i < selectionObjects.length; i++) {
+            selectionObjects[i].clear();
+          }
+        }
+      };
     }
   };
 
@@ -1295,7 +1372,7 @@ ot.CodeMirrorAdapter = (function () {
 
   return CodeMirrorAdapter;
 
-}());
+}(this));
 
 /*global ot */
 
