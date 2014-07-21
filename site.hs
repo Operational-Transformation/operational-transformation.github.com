@@ -18,7 +18,7 @@ main = hakyll $ do
     compile $ getResourceLBS >>= withItemBody (unixFilterLBS "coffee" ["--stdio", "--print"])
   match "templates/*" $ compile templateCompiler
   let components = map (fromString . ("bower_components/" ++))
-        [ "jquery/jquery.js"
+        [ "jquery/dist/jquery.js"
         , "underscore/underscore.js"
         , "codemirror/lib/codemirror.css"
         , "codemirror/lib/codemirror.js"
