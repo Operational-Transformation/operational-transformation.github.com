@@ -238,7 +238,7 @@ function onReceiveOperation (json) {
 Feedback and questions
 ----------------------
 
-* GitHub: https://github.com/timjb/javascript-operational-transformation
+* GitHub: https://github.com/Operational-Transformation/ot.js
 * Email: `tim@timbaumann.info <mailto:tim@timbaumann.info>`_
 
 <!--
