@@ -20,8 +20,8 @@ executable ot-site
   main-is:             site.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.6 && <4.7,
-                       hakyll >= 4.4 && < 4.5,
+  build-depends:       base >= 4.7 && < 5,
+                       hakyll >= 4.6.2 && < 4.7,
                        pandoc >= 1.12 && < 2,
                        data-default >= 0.5.3 && < 0.7
   -- hs-source-dirs:      
