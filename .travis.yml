@@ -5,6 +5,7 @@ branches:
 env:
   global:
     - secure: "PwWsyATRkgTZ6S7s3iFw6xdSh4SyXtL8dkBSqzmZNqAoAMKBs8JmpKZjeGxbEWauHQcuO7YBq0eppQzQAK3s6dJtCSnmkxeM4jxS9NMkXYYvj0fkLUHMzlmwH03PIwCq1S+kc7tb1fqfEOS5Lscx43S+IbT2oUf7V3La7tzQaDA="
+ghc: 7.8
 install:
   - cabal install
 before_script:
