@@ -252,13 +252,13 @@ class MyClient extends Client
       lineNumbers: true
       lineWrapping: true
       value: str
-    @cm.on 'change', (cm, change) =>
+    @cm.on 'changes', (cm, changes) =>
       unless @fromServer
         operation = new WrappedOperation(
-          CodeMirrorAdapter.operationFromCodeMirrorChange(change, @cm)[0],
+          CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, @cm)[0],
           { creator: @name, id: _.uniqueId('operation') }
         )
-        console.log(change, operation)
+        console.log(changes, operation)
         @applyClient(operation)
     cmWrapper.detach().appendTo(@el)
 
