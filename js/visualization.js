@@ -336,15 +336,15 @@
         lineWrapping: true,
         value: str
       });
-      this.cm.on('change', (function(_this) {
-        return function(cm, change) {
+      this.cm.on('changes', (function(_this) {
+        return function(cm, changes) {
           var operation;
           if (!_this.fromServer) {
-            operation = new WrappedOperation(CodeMirrorAdapter.operationFromCodeMirrorChange(change, _this.cm)[0], {
+            operation = new WrappedOperation(CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, _this.cm)[0], {
               creator: _this.name,
               id: _.uniqueId('operation')
             });
-            console.log(change, operation);
+            console.log(changes, operation);
             return _this.applyClient(operation);
           }
         };

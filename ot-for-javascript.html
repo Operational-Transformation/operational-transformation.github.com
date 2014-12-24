@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Operational Transformation in JavaScript – OT Explained</title>
+    <title>Operational Transformation in JavaScript &ndash; OT Explained</title>
     <link rel="stylesheet" href="./css/layout.css" />
     <link rel="stylesheet" href="./static/codemirror/lib/codemirror.css" />
     <link reL="stylesheet" href="./css/visualization.css" />
@@ -30,7 +30,6 @@
 <pre><code>    $ npm install ot</code></pre>
 <p>Here’s how to include it:</p>
 <!-- TODO: usage with bower -->
-
 <pre class="sourceCode javascript"><code class="sourceCode javascript">    <span class="kw">var</span> ot = <span class="fu">require</span>(<span class="st">'ot'</span>);</code></pre>
 <h3 id="browser">Browser</h3>
 <p>Download the <a href="https://raw.github.com/Operational-Transformation/ot.js/master/dist/ot.js">combined script</a> that includes only the relevant parts for building a browser client or the <a href="https://raw.github.com/Operational-Transformation/ot.js/master/dist/ot-min.js">minified script</a> for production.</p>
@@ -38,8 +37,6 @@
 <!--
 The script has been tested on Chromium 17, Firefox 11 and Internet Explorer 9.
 -->
-
-
 <h2 id="operation">Operation</h2>
 <p>Operational Transformation is a general technology that can work with many types of documents like drawings, rich-text documents and complex data structures. However, this library currently includes only operations on plain text documents. Here’s how you can create an operation:</p>
 <pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> operation = <span class="kw">new</span> <span class="ot">ot</span>.<span class="fu">Operation</span>()
@@ -118,8 +115,6 @@ inverse.apply(operation.apply(str)); // => "lorem ipsum"
 
 This function comes in handy when implementing undo and redo stacks.
 -->
-
-
 <!--
 CodeMirror integration
 ----------------------
@@ -154,8 +149,6 @@ operation.applyToCodeMirror(cm);
 
 A call to this method will trigger the ``onChange`` callback. Therefore you have to be careful not to create infinite loops by applying an operation received from the server and sending it back to the server as if it was a change that the user has made.
 -->
-
-
 <h2 id="server">Server</h2>
 <pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> server = <span class="kw">new</span> <span class="ot">ot</span>.<span class="fu">Server</span>(<span class="st">&quot;lorem ipsum&quot;</span>);
 <span class="ot">server</span>.<span class="fu">broadcast</span> = <span class="kw">function</span> (operation) {
@@ -203,9 +196,6 @@ A call to this method will trigger the ``onChange`` callback. Therefore you have
 <!--
 * IRC: there's a good chance I'm hanging out as timjb on #tree (that's the channel of the `Tree project <https://github.com/garden/tree>`_, a project using my library)
 -->
-
-
-
     </div>
   </body>
 </html>

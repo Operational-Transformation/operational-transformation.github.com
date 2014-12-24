@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Operational Transformation – OT Explained</title>
+    <title>Operational Transformation &ndash; OT Explained</title>
     <link rel="stylesheet" href="./css/layout.css" />
     <link rel="stylesheet" href="./static/codemirror/lib/codemirror.css" />
     <link reL="stylesheet" href="./css/visualization.css" />
@@ -34,7 +34,6 @@
   * http://googledocs.blogspot.de/2010/09/whats-different-about-new-google-docs_22.html
   * http://googledocs.blogspot.de/2010/09/whats-different-about-new-google-docs_23.html
 -->
-
 <ul>
 <li><a href="http://www.codingmonkeys.de/subethaedit/">SubEthaEdit (code editor)</a></li>
 <li><a href="http://etherpad.org/">EtherPad</a></li>
@@ -48,9 +47,8 @@
 <p>For simplicity’s sake, we won’t consider rich-text documents or vector-based drawings. Instead we’re going to focus on plain-text documents for the rest of this introductory article. There are only two fundamental actions on text documents, which will be our definition of operations in this setting:</p>
 <dl>
 <dt>Insertions</dt>
-<dd>An insertion consists of the inserted text and its position in the document. First, we’ll have to choose a coordinate system for our document. We could use a combination of line number and position within that line, but treating a document like a sequence of characters and giving the index (zero-based) index seems somewhat simpler. For brevity, we adapt the notation <span class="op-insert">Insert(“World”, 6)</span> for an insertion at position 6.
+<dd>An insertion consists of the inserted text and its position in the document. First, we’ll have to choose a coordinate system for our document. We could use a combination of line number and position within that line, but treating a document like a sequence of characters and giving the index (zero-based) index seems somewhat simpler. For brevity, we adapt the notation <span class="op-insert">Insert(“World”, 6)</span> for an insertion at position 6. Deletions
 </dd>
-<dt>Deletions</dt>
 <dd>When we have insertions, we will of course support deletions, too. For example <span class="op-delete">Delete(5, 6)</span> is a deletion of 5 characters, beginning at position 6 (this would undo the insertion above).
 </dd>
 </dl>
@@ -125,7 +123,6 @@ $(document).ready(function () {
   }
 });
 </script>
-
 <h2 id="a-first-approach">A first approach</h2>
 <p>Let’s try to do the simplest thing that could possibly work!</p>
     </div>
