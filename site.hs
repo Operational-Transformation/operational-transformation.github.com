@@ -6,7 +6,9 @@ import Control.Arrow ((>>>))
 import Data.String (fromString)
 import Hakyll
 import Data.Default (Default (..))
-import Text.Pandoc.Options (ReaderOptions (..))
+import Text.Pandoc.Options (Extension (..), ReaderOptions (..))
+import Data.Monoid ((<>))
+import qualified Data.Set as S
 
 main :: IO ()
 main = hakyll $ do
@@ -36,7 +38,11 @@ main = hakyll $ do
     route   $ replaceSrc `composeRoutes` setExtension "html"
     compile $ do
       tpl <- loadBody "templates/layout.html"
-      pandocCompiler
+      let rExts = S.insert Ext_raw_html $
+                  S.delete Ext_markdown_in_html_blocks $
+                  readerExtensions defaultHakyllReaderOptions
+          readerOptions = defaultHakyllReaderOptions { readerExtensions = rExts }
+      pandocCompilerWith readerOptions defaultHakyllWriterOptions
         >>= applyTemplate tpl defaultContext
         >>= relativizeUrls
   match "src/*.js" $ do
