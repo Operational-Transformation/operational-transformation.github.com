@@ -42,12 +42,12 @@ Deletions
 All other changes can be represented in terms of these two actions. For example, the replacement of a character with another has the same effect as a deletion of a character followed by an insertion at the same position. Below, you can edit and see the resulting operations on the right:
 
 <div id="operations-demo" class="demo row">
-  <div class="span6 offset3 well">
+  <div class="col-md-8 col-md-offset-2 well">
     <div class="row">
-      <div class="span4">
+      <div class="col-md-8">
         <textarea></textarea>
       </div>
-      <div class="span2 operations">
+      <div class="col-md-4 operations">
         <ul></ul>
       </div>
     </div>
@@ -73,7 +73,7 @@ $(document).ready(function () {
       }
     } else if (operation instanceof STO.Delete) {
       for (var c = operation.count; c > 0; c--) {
-        charOperations.push(new STO.Delete(1, operation.position))
+        charOperations.push(new STO.Delete(1, operation.position));
       }
     }
     return charOperations;
@@ -90,8 +90,8 @@ $(document).ready(function () {
     "Dolor sit amet consectetuer elit.\n\n" +
     "Type here to see operations on the right"
   );
-  cm.on('change', function (cm, change) {
-    var operation = ot.CodeMirrorAdapter.operationFromCodeMirrorChange(change, cm)[0];
+  cm.on('changes', function (cm, changes) {
+    var operation = ot.CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, cm)[0];
     var simpleOperations = STO.fromTextOperation(operation);
     _.each(_.flatten(_.map(simpleOperations, makeCharTextOperations)), addToList);
   });
