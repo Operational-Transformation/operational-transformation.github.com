@@ -79,12 +79,12 @@
           }
         };
       };
-      this.server = new MyServer(str).appendTo(this.el);
+      this.server = new MyServer(this.str).appendTo(this.el);
       this.aliceSendChannel = new NetworkChannel(true, serverReceive).appendTo(this.el);
       this.aliceSendChannel.el.attr({
         id: 'alice-send-channel'
       });
-      this.alice = new MyClient("Alice", str, 0, this.aliceSendChannel).appendTo(this.el);
+      this.alice = new MyClient("Alice", this.str, 0, this.aliceSendChannel).appendTo(this.el);
       this.alice.el.attr({
         id: 'alice'
       });
@@ -97,7 +97,7 @@
       this.bobSendChannel.el.attr({
         id: 'bob-send-channel'
       });
-      this.bob = new MyClient("Bob", str, 0, this.bobSendChannel).appendTo(this.el);
+      this.bob = new MyClient("Bob", this.str, 0, this.bobSendChannel).appendTo(this.el);
       this.bob.el.attr({
         id: 'bob'
       });
