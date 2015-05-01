@@ -1,7 +1,7 @@
 (function() {
   var Client, CodeMirrorAdapter, DiamondEdge, DiamondPoint, LEFT, MyClient, MyServer, NetworkChannel, RIGHT, Server, TextOperation, View, Visualization, WrappedOperation, createOperationElement, hideSpan, highlight, operationPopoverContent, operationToHtml, quote, stateTransitions, tr, unescape,
-    __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   Client = ot.Client;
 
@@ -21,15 +21,15 @@
   };
 
   operationToHtml = function(operation) {
-    var html, i, op, _i, _len, _ref;
+    var html, i, j, len, op, ref;
     html = '';
-    _ref = operation.ops;
-    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-      op = _ref[i];
+    ref = operation.ops;
+    for (i = j = 0, len = ref.length; j < len; i = ++j) {
+      op = ref[i];
       if (i !== 0) {
         html += ", ";
       }
-      html += TextOperation.isRetain(op) ? '<span class="op-retain">retain(' + op + ')</span>' : TextOperation.isInsert(op) ? '<span class="op-insert">insert("' + op + '")</span>' : '<span class="op-delete">delete(' + (-op) + '</span>';
+      html += TextOperation.isRetain(op) ? '<span class="op-retain">retain(' + op + ')</span>' : TextOperation.isInsert(op) ? '<span class="op-insert">insert("' + op + '")</span>' : '<span class="op-delete">delete(' + (-op) + ')</span>';
     }
     return html;
   };
@@ -47,9 +47,9 @@
   };
 
   Visualization = (function() {
-    function Visualization(str) {
+    function Visualization(str1) {
       var clientReceive, serverReceive;
-      this.str = str;
+      this.str = str1;
       this.el = $('<div id="visualization" />').delegate('.operation', {
         mouseenter: function() {
           var operationId;
@@ -251,19 +251,19 @@
     };
 
     NetworkChannel.prototype.distributeElements = function() {
-      var el, i, index, partLength, totalHeight, _i, _len, _ref, _results;
+      var el, i, index, j, len, partLength, ref, results, totalHeight;
       totalHeight = 150;
       partLength = totalHeight / (this.els.length + 1);
-      _ref = this.els;
-      _results = [];
-      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-        el = _ref[i];
+      ref = this.els;
+      results = [];
+      for (i = j = 0, len = ref.length; j < len; i = ++j) {
+        el = ref[i];
         index = this.up ? i + 1 : this.els.length - i;
-        _results.push(el.css({
+        results.push(el.css({
           top: (Math.floor(index * partLength) - 12) + 'px'
         }));
       }
-      return _results;
+      return results;
     };
 
     NetworkChannel.prototype.receive = function() {
@@ -276,8 +276,8 @@
 
   _.extend(NetworkChannel.prototype, View);
 
-  MyServer = (function(_super) {
-    __extends(MyServer, _super);
+  MyServer = (function(superClass) {
+    extend(MyServer, superClass);
 
     function MyServer(doc) {
       MyServer.__super__.constructor.call(this, doc);
@@ -308,8 +308,8 @@
 
   _.extend(MyServer.prototype, View);
 
-  MyClient = (function(_super) {
-    __extends(MyClient, _super);
+  MyClient = (function(superClass) {
+    extend(MyClient, superClass);
 
     function MyClient(name, str, revision, channel) {
       var cmWrapper, self;
@@ -492,20 +492,20 @@
     };
 
     MyClient.prototype.setState = function(state) {
-      var oldState, transition, _i, _len, _results;
+      var j, len, oldState, results, transition;
       oldState = this.state;
       this.state = state;
-      _results = [];
-      for (_i = 0, _len = stateTransitions.length; _i < _len; _i++) {
-        transition = stateTransitions[_i];
+      results = [];
+      for (j = 0, len = stateTransitions.length; j < len; j++) {
+        transition = stateTransitions[j];
         if (oldState instanceof transition[0] && state instanceof transition[1]) {
           transition[2].call(this);
           break;
         } else {
-          _results.push(void 0);
+          results.push(void 0);
         }
       }
-      return _results;
+      return results;
     };
 
     MyClient.prototype.applyClient = function(operation) {
