@@ -24,7 +24,7 @@ operationToHtml = (operation) ->
     else if TextOperation.isInsert(op)
       '<span class="op-insert">insert("' + op + '")</span>'
     else
-      '<span class="op-delete">delete(' + (-op) + '</span>'
+      '<span class="op-delete">delete(' + (-op) + ')</span>'
   html
 
 operationPopoverContent = (operation) -> () ->
