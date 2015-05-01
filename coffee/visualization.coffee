@@ -68,10 +68,10 @@ class Visualization
       else
         client.applyServer(o)
 
-    @server = new MyServer(str).appendTo(@el)
+    @server = new MyServer(@str).appendTo(@el)
     @aliceSendChannel = new NetworkChannel(true, serverReceive).appendTo(@el)
     @aliceSendChannel.el.attr({ id: 'alice-send-channel' })
-    @alice = new MyClient("Alice", str, 0, @aliceSendChannel)
+    @alice = new MyClient("Alice", @str, 0, @aliceSendChannel)
       .appendTo(@el)
     @alice.el.attr({ id: 'alice' })
     @alice.svg.attr('id', 'alice-diamond-diagram')
@@ -80,7 +80,7 @@ class Visualization
 
     @bobSendChannel = new NetworkChannel(true, serverReceive).appendTo(@el)
     @bobSendChannel.el.attr({ id: 'bob-send-channel' })
-    @bob = new MyClient("Bob", str, 0, @bobSendChannel)
+    @bob = new MyClient("Bob", @str, 0, @bobSendChannel)
       .appendTo(@el)
     @bob.el.attr({ id: 'bob' })
     @bob.svg.attr('id', 'bob-diamond-diagram')
