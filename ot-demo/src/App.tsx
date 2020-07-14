@@ -1,24 +1,25 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Visualization } from './Visualization';
+import {createUseStyles} from 'react-jss'
+
+const useStyles = createUseStyles({
+  wrapper: {
+    width: "940px",
+    margin: "20px auto",
+  },
+  header: {
+    margin: "0 0 40px",
+    textAlign: "center",
+  },
+});
 
 function App() {
+  const classes = useStyles();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className={classes.wrapper}>
+      <h1 className={classes.header}>Visualization of OT with a central server</h1>
+      <Visualization />
     </div>
   );
 }
