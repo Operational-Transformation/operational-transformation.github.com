@@ -1,6 +1,6 @@
 import React from 'react';
 import { Visualization } from './Visualization';
-import {createUseStyles} from 'react-jss'
+import {createUseStyles} from 'react-jss';
 
 const useStyles = createUseStyles({
   wrapper: {
