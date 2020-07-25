@@ -14,6 +14,7 @@ import { useSharedStyles } from "./sharedStyles";
 import IconButton from "@material-ui/core/IconButton";
 import Tooltip from "@material-ui/core/Tooltip";
 import ArrowUpward from "@material-ui/icons/ArrowUpward";
+import ArrowDownward from "@material-ui/icons/ArrowDownward";
 import Computer from "@material-ui/icons/Computer";
 
 const useOperationStyles = createUseStyles({
@@ -28,13 +29,11 @@ const useOperationStyles = createUseStyles({
     transitionProperty: "top",
     transitionDuration: "0.5s",
   },
-  operationAtBottom: {
-    top: "calc(100% + 20px)",
-  },
 });
 
 interface OperationInSocketProps {
   operation: OperationAndRevision;
+  initialPositionTop: string;
   positionTop?: string;
 }
 
@@ -54,17 +53,22 @@ const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => 
 
   return (
     <div
-      className={clsx(classes.operation, {
-        [classes.operationAtBottom]: initialRender,
-      })}
+      className={classes.operation}
       style={
-        !initialRender && props.positionTop !== undefined ? { top: props.positionTop } : undefined
+        initialRender
+          ? { top: props.initialPositionTop }
+          : props.positionTop !== undefined
+          ? { top: props.positionTop }
+          : undefined
       }
     />
   );
 };
+
 const useSocketStyles = createUseStyles({
   socket: {
+    position: "relative",
+    margin: "0 40px",
     height: "100%",
   },
   line: {
@@ -91,40 +95,46 @@ const useSocketStyles = createUseStyles({
   },
 });
 
-interface ToServerSocketProps {
-  className: string;
+enum SocketDirection {
+  UP,
+  DOWN,
+}
+
+interface SocketProps {
+  direction: SocketDirection;
+  tooltip: string;
   queue: Queue<OperationAndRevision>;
   onReceiveClick: () => void;
 }
 
-const ToServerSocket: FunctionComponent<ToServerSocketProps> = (props) => {
+const Socket: FunctionComponent<SocketProps> = (props) => {
   const socketClasses = useSocketStyles();
 
   const queueEmpty = props.queue.length === 0;
+
+  const positionInverter = props.direction === SocketDirection.DOWN ? "100% -" : "";
 
   const receiveButton = (
     <IconButton
       className={socketClasses.receiveButton}
       onClick={props.onReceiveClick}
       disabled={queueEmpty}
+      style={{ top: `calc(${positionInverter} 0%)` }}
     >
-      <ArrowUpward />
+      {props.direction === SocketDirection.UP ? <ArrowUpward /> : <ArrowDownward />}
     </IconButton>
   );
 
   return (
-    <div className={clsx(socketClasses.socket, props.className)}>
-      {queueEmpty ? (
-        receiveButton
-      ) : (
-        <Tooltip title="Receive next operation from client">{receiveButton}</Tooltip>
-      )}
+    <div className={socketClasses.socket}>
+      {queueEmpty ? receiveButton : <Tooltip title={props.tooltip}>{receiveButton}</Tooltip>}
       <div className={socketClasses.line} />
       {props.queue.map((operationWithRevision, i) => (
         <OperationInSocket
           key={operationWithRevision.key}
           operation={operationWithRevision}
-          positionTop={`calc(100% / ${props.queue.length + 1} * ${i + 1})`}
+          positionTop={`calc(${positionInverter} 100% / ${props.queue.length + 1} * ${i + 1})`}
+          initialPositionTop={`calc(${positionInverter} (100% + 20px))`}
         />
       ))}
     </div>
@@ -138,12 +148,10 @@ const useClientStyles = createUseStyles({
     display: "flex",
     flexDirection: "column",
   },
-  toServerSocket: {
-    position: "absolute",
-    left: "100px",
-    height: "100%",
-  },
   sockets: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
     position: "relative",
     height: "150px",
   },
@@ -205,10 +213,20 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
   return (
     <div className={props.className}>
       <div className={clientClasses.sockets}>
-        <ToServerSocket
-          className={clientClasses.toServerSocket}
+        <Socket
+          direction={SocketDirection.UP}
+          tooltip="Receive next operation from client"
           queue={props.state.toServer}
           onReceiveClick={props.onServerReceiveClick}
+        />
+        <Socket
+          direction={SocketDirection.DOWN}
+          tooltip="Receive next operation from server"
+          queue={props.state.fromServer}
+          onReceiveClick={() => {
+            alert("To Client Socket Receive Click");
+            /* TODO */
+          }}
         />
       </div>
       <div className={clsx(sharedClasses.site, clientClasses.client)}>

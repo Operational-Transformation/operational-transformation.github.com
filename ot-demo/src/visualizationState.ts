@@ -48,7 +48,7 @@ export type SynchronizationState =
 
 export interface ClientAndSocketsVisualizationState {
   toServer: Queue<OperationAndRevision>;
-  fromServer: Queue<Operation>;
+  fromServer: Queue<OperationAndRevision>;
   synchronizationState: SynchronizationState;
   text: string;
 }
@@ -59,23 +59,30 @@ export interface VisualizationState {
   bob: ClientAndSocketsVisualizationState;
 }
 
+const transformTextOperation = (
+  a: TextOperation,
+  b: TextOperation,
+): [TextOperation, TextOperation] =>
+  (TextOperation.transform(a, b) as unknown) as [TextOperation, TextOperation]; // because type definition is wrong
+
 function receiveOperationFromClient(
   server: ServerVisualizationState,
   operation: OperationAndRevision,
 ): {
   newServerState: ServerVisualizationState;
-  operationToBroadcast: Operation;
+  operationToBroadcast: OperationAndRevision;
 } {
   const concurrentOperations = server.operations.slice(operation.revision);
 
   const transformedTextOperation = concurrentOperations.reduce(
-    (op, concurrentOp) => TextOperation.transform(op, concurrentOp.textOperation),
+    (op, concurrentOp) => transformTextOperation(op, concurrentOp.textOperation)[0],
     operation.textOperation,
   );
 
-  const operationToBroadcast: Operation = {
+  const operationToBroadcast: OperationAndRevision = {
     key: operation.key,
     textOperation: transformedTextOperation,
+    revision: server.operations.length,
   };
   const newServerState: ServerVisualizationState = {
     operations: [...server.operations, operationToBroadcast],
@@ -176,7 +183,7 @@ export function onClientOperation(
 
 function sendOperation(
   client: ClientAndSocketsVisualizationState,
-  operation: Operation,
+  operation: OperationAndRevision,
 ): ClientAndSocketsVisualizationState {
   return {
     ...client,

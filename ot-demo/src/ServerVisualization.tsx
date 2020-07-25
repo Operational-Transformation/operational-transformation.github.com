@@ -31,7 +31,7 @@ export const ServerVisualization: FunctionComponent<ServerVisualizationProps> = 
         Central Server
       </h2>
       <p>
-        Document: <span className={classes.document}>{props.state.text.replace(/\n/g, "\\n")}</span>
+        Document: <span className={classes.document}>{props.state.text.replace(/\n/g, "↲")}</span>
       </p>
     </div>
   );
