@@ -1,9 +1,10 @@
-import React, { useState, FunctionComponent } from "react";
+import React, { useState, FunctionComponent, useEffect, useCallback, CSSProperties } from "react";
 import {createUseStyles} from 'react-jss';
 import clsx from 'clsx';
 import { TextOperation } from "ot";
-import { Editor, EditorChange, EditorConfiguration } from "codemirror";
-import { Controlled as CodeMirror } from 'react-codemirror2';
+import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
+import { UnControlled as CodeMirror } from 'react-codemirror2';
+import { CodeMirrorAdapter } from "./codemirror-adapter";
 
 const useStyles = createUseStyles({
   container: {
@@ -32,12 +33,16 @@ const useStyles = createUseStyles({
   alice: {
     position: "absolute",
     left: "0px",
-    top: "280px",
+    top: "130px",
   },
   bob: {
     position: "absolute",
     right: "0px",
-    top: "280px",
+    top: "130px",
+  },
+  sockets: {
+    position: "relative",
+    height: "150px",
   },
   codeMirrorContainer: {
     border: "1px solid #ccc",
@@ -61,6 +66,7 @@ interface OperationAndRevision extends Operation {
 
 interface ServerVisualizationState {
   operations: Operation[];
+  text: string;
 }
 
 enum ClientStateStatus {
@@ -69,16 +75,23 @@ enum ClientStateStatus {
   AWAITING_ACK_WITH_OPERATION = "AWAITING_ACK_WITH_OPERATION",
 }
 
-interface SynchronizationStateSynchronized {
+interface BaseSynchronizationState {
+  serverRevision: number; // non-negative integer
+}
+
+interface SynchronizationStateSynchronized extends BaseSynchronizationState {
   status: ClientStateStatus.SYNCHRONIZED,
 }
 
-interface SynchronizationStateAwaitingAck {
+interface SynchronizationStateAwaitingAck extends BaseSynchronizationState {
   status: ClientStateStatus.AWAITING_ACK,
+  expectedOperation: TextOperation;
 }
 
-interface SynchronizationStateAwaitingAckWithOperation {
+interface SynchronizationStateAwaitingAckWithOperation extends BaseSynchronizationState {
   status: ClientStateStatus.AWAITING_ACK_WITH_OPERATION,
+  expectedOperation: TextOperation;
+  buffer: TextOperation;
 }
 
 type SynchronizationState = SynchronizationStateSynchronized | SynchronizationStateAwaitingAck | SynchronizationStateAwaitingAckWithOperation;
@@ -110,17 +123,69 @@ function receiveOperationFromClient(server: ServerVisualizationState, operation:
   }
   const newServer: ServerVisualizationState = {
     operations: [...server.operations, operationToBroadcast],
+    text: transformedTextOperation.apply(server.text),
   }
   return { operationToBroadcast, newServer };
 }
 
+function processClientUserOperation(synchronizationState: SynchronizationState, textOperation: TextOperation, clientName: string): ({
+  newSynchronizationState: SynchronizationState,
+  operationsToSendToServer: OperationAndRevision[],
+}) {
+  switch (synchronizationState.status) {
+    case ClientStateStatus.SYNCHRONIZED:
+      const revision = synchronizationState.serverRevision + 1;
+      return {
+        newSynchronizationState: {
+          status: ClientStateStatus.AWAITING_ACK,
+          serverRevision: synchronizationState.serverRevision,
+          expectedOperation: textOperation,
+        },
+        operationsToSendToServer: [{ revision, textOperation, key: `${clientName}-${revision}` }],
+      };
+    case ClientStateStatus.AWAITING_ACK:
+      return {
+        newSynchronizationState: {
+          status: ClientStateStatus.AWAITING_ACK_WITH_OPERATION,
+          serverRevision: synchronizationState.serverRevision,
+          expectedOperation: synchronizationState.expectedOperation,
+          buffer: textOperation,
+        },
+        operationsToSendToServer: [],
+      };
+    case ClientStateStatus.AWAITING_ACK_WITH_OPERATION:
+      return {
+        newSynchronizationState: {
+          status: ClientStateStatus.AWAITING_ACK_WITH_OPERATION,
+          serverRevision: synchronizationState.serverRevision,
+          expectedOperation: synchronizationState.expectedOperation,
+          buffer: synchronizationState.buffer.compose(textOperation),
+        },
+        operationsToSendToServer: [],
+      };
+  }
+}
+
+function clientUserOperation(client: ClientAndSocketsVisualizationState, operation: TextOperation, clientName: string): ClientAndSocketsVisualizationState {
+  const { newSynchronizationState, operationsToSendToServer } = processClientUserOperation(client.synchronizationState, operation, clientName);
+
+  return {
+    synchronizationState: newSynchronizationState,
+    toServer: [...client.toServer, ...operationsToSendToServer],
+    fromServer: client.fromServer,
+    text: operation.apply(client.text),
+  };
+}
+
 const initialText = "Lorem ipsum";
+const initialRevision = 0;
 
 const initialClientAndSocketsVisualizationState: ClientAndSocketsVisualizationState = {
   toServer: [],
   fromServer: [],
   synchronizationState: {
     status: ClientStateStatus.SYNCHRONIZED,
+    serverRevision: initialRevision,
   },
   text: initialText,
 };
@@ -130,7 +195,23 @@ const initialVisualizationState: VisualizationState = {
   bob: initialClientAndSocketsVisualizationState,
   server: {
     operations: [],
+    text: initialText,
   },
+};
+
+interface Lens<S,A> {
+  get: (s: S) => A;
+  set: (s: S, a: A) => S;
+}
+
+const aliceLens: Lens<VisualizationState, ClientAndSocketsVisualizationState> = {
+  get: (globalState) => globalState.alice,
+  set: (globalState, aliceState) => ({ ...globalState, alice: aliceState }),
+};
+
+const bobLens: Lens<VisualizationState, ClientAndSocketsVisualizationState> = {
+  get: (globalState) => globalState.bob,
+  set: (globalState, bobState) => ({ ...globalState, bob: bobState }),
 };
 
 export const Visualization = () => {
@@ -138,11 +219,22 @@ export const Visualization = () => {
 
   const [visualizationState, setVisualizationState] = useState<VisualizationState>(initialVisualizationState);
 
+  const makeClientProps = (
+    clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
+    clientName: string
+  ): Pick<ClientAndSocketsVisualizationProps, "state" | "onClientOperation"> => ({
+    state: clientLens.get(visualizationState),
+    onClientOperation: operation => {
+      const newClientState = clientUserOperation(clientLens.get(visualizationState), operation, clientName);
+      setVisualizationState(clientLens.set(visualizationState, newClientState));
+    },
+  });
+
   return (
     <div className={classes.container}>
       <ServerVisualization state={visualizationState.server} />
-      <ClientAndSocketsVisualization state={visualizationState.alice} clientName="Alice" className={classes.alice} />
-      <ClientAndSocketsVisualization state={visualizationState.bob} clientName="Bob" className={classes.bob} />
+      <ClientAndSocketsVisualization clientName="Alice" className={classes.alice} {...makeClientProps(aliceLens, "alice")} />
+      <ClientAndSocketsVisualization clientName="Bob" className={classes.bob} {...makeClientProps(bobLens, "bob")} />
     </div>
   );
 };
@@ -157,14 +249,103 @@ const ServerVisualization: FunctionComponent<ServerVisualizationProps> = (props)
   return (
     <div className={clsx(classes.site, classes.server)}>
       <h2>Server</h2>
+      <p>Doc: {props.state.text.replace(/\n/g, "\\n")}</p>
     </div>
   );
 };
+
+const useOperationStyles = createUseStyles({
+  operation: {
+    position: "absolute",
+    zIndex: "-1",
+    width: "20px",
+    height: "20px",
+    borderRadius: "10px",
+    transform: "translate(-10px, -10px)",
+    background: "#888",
+    transitionProperty: "top",
+    transitionDuration: "0.5s",
+  },
+  operationAtBottom: {
+    top: "calc(100% + 20px)",
+  },
+});
+
+interface OperationInSocketProps {
+  operation: OperationAndRevision;
+  positionTop?: string,
+}
+
+const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => {
+  const classes = useOperationStyles();
+
+  const [initialRender, setInitialRender] = useState<boolean>(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setInitialRender(false);
+    }, 10);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  return (
+    <div
+      className={clsx(classes.operation, { [classes.operationAtBottom]: initialRender })}
+      style={!initialRender && props.positionTop !== undefined ? { top: props.positionTop } : undefined}
+    />
+  );
+};
+
+const useSocketStyles = createUseStyles({
+  socket: {
+    height: "100%",
+  },
+  line: {
+    position: "absolute",
+    left: "-1px",
+    height: "100%",
+    borderLeft: "2px dashed #eee",
+    zIndex: "-1",
+  },
+});
+
+interface ToServerSocketProps {
+  className: string;
+  queue: Queue<OperationAndRevision>;
+}
+
+const ToServerSocket: FunctionComponent<ToServerSocketProps> = (props) => {
+  const socketClasses = useSocketStyles();
+
+  return (
+    <div className={clsx(socketClasses.socket, props.className)}>
+      <div className={socketClasses.line}></div>
+      {props.queue.map((operationWithRevision, i) => (
+        <OperationInSocket
+          key={operationWithRevision.key}
+          operation={operationWithRevision}
+          positionTop={`calc(100% / ${props.queue.length + 1} * ${i + 1})`}
+        />
+      ))}
+    </div>
+  );
+};
+
+const useClientStyles = createUseStyles({
+  toServerSocket: {
+    position: "absolute",
+    left: "100px",
+    height: "100%",
+  },
+});
 
 interface ClientAndSocketsVisualizationProps {
   clientName: string;
   className: string;
   state: ClientAndSocketsVisualizationState;
+  onClientOperation: (operation: TextOperation) => void;
 }
 
 const editorConfiguration: EditorConfiguration = {
@@ -172,19 +353,38 @@ const editorConfiguration: EditorConfiguration = {
 };
 
 const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVisualizationProps> = (props) => {
+  const { onClientOperation } = props;
+  const clientClasses = useClientStyles();
   const classes = useStyles();
 
-  const onBeforeChange = (editor: Editor, data: EditorChange, value: string) => {
-    console.log("onBeforeChange called with ", editor, data, value); // TODO: remove
-  };
-  const onChange = (editor: Editor, data: EditorChange, value: string) => {
-    console.log("onChange called with ", editor, data, value); // TODO: remove
-  };
+  const [editor, setEditor] = useState<Editor | undefined>(undefined);
+
+  const onChanges = useCallback((editor: Editor, changes: EditorChangeLinkedList[]) => {
+    console.log("onChanges called with ", editor, changes); // TODO: remove
+    const [operation, inverse] = CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, editor);
+    console.log("operation=", operation); // TODO
+    console.log("inverse=", inverse); // TODO
+    onClientOperation(operation);
+  }, [onClientOperation]);
+
+  useEffect(() => {
+    if (editor !== undefined) {
+      editor.on("changes", onChanges);
+      return () => {
+        editor.off("changes", onChanges);
+      };
+    }
+  }, [editor, onChanges]);
 
   return (
-    <div className={clsx(classes.site, classes.client, props.className)}>
-      <h2>{props.clientName}</h2>
-      <CodeMirror className={classes.codeMirrorContainer} options={editorConfiguration} value={props.state.text} onBeforeChange={onBeforeChange} onChange={onChange} />
+    <div className={props.className}>
+      <div className={classes.sockets}>
+        <ToServerSocket className={clientClasses.toServerSocket} queue={props.state.toServer} />
+      </div>
+      <div className={clsx(classes.site, classes.client)}>
+        <h2>{props.clientName}</h2>
+        <CodeMirror className={classes.codeMirrorContainer} options={editorConfiguration} value={initialText} editorDidMount={setEditor} />
+      </div>
     </div>
   );
 };
