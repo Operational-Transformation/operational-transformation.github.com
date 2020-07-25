@@ -5,21 +5,16 @@ import {
 } from "./visualizationState";
 import { TextOperation } from "ot";
 import { createUseStyles } from "react-jss";
-import React, {
-  FunctionComponent,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import {
-  Editor,
-  EditorChangeLinkedList,
-  EditorConfiguration,
-} from "codemirror";
+import React, { FunctionComponent, useCallback, useEffect, useState } from "react";
+import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
 import clsx from "clsx";
 import { UnControlled as CodeMirror } from "react-codemirror2";
 import { useSharedStyles } from "./sharedStyles";
+import IconButton from "@material-ui/core/IconButton";
+import Tooltip from "@material-ui/core/Tooltip";
+import ArrowUpward from "@material-ui/icons/ArrowUpward";
+import Computer from "@material-ui/icons/Computer";
 
 const useOperationStyles = createUseStyles({
   operation: {
@@ -43,9 +38,7 @@ interface OperationInSocketProps {
   positionTop?: string;
 }
 
-const OperationInSocket: FunctionComponent<OperationInSocketProps> = (
-  props,
-) => {
+const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => {
   const classes = useOperationStyles();
 
   const [initialRender, setInitialRender] = useState<boolean>(true);
@@ -65,9 +58,7 @@ const OperationInSocket: FunctionComponent<OperationInSocketProps> = (
         [classes.operationAtBottom]: initialRender,
       })}
       style={
-        !initialRender && props.positionTop !== undefined
-          ? { top: props.positionTop }
-          : undefined
+        !initialRender && props.positionTop !== undefined ? { top: props.positionTop } : undefined
       }
     />
   );
@@ -83,19 +74,52 @@ const useSocketStyles = createUseStyles({
     borderLeft: "2px dashed #eee",
     zIndex: "-1",
   },
+  receiveButton: {
+    // specificity hack
+    "&$receiveButton": {
+      backgroundColor: "#7FDBFF",
+      position: "absolute",
+      padding: "2px",
+      transform: "translate(-50%, -50%)",
+      "&:hover": {
+        backgroundColor: "#7faaff",
+      },
+      "&[class*=Mui-disabled]": {
+        backgroundColor: "#ddd",
+      },
+    },
+  },
 });
 
 interface ToServerSocketProps {
   className: string;
   queue: Queue<OperationAndRevision>;
+  onReceiveClick: () => void;
 }
 
 const ToServerSocket: FunctionComponent<ToServerSocketProps> = (props) => {
   const socketClasses = useSocketStyles();
 
+  const queueEmpty = props.queue.length === 0;
+
+  const receiveButton = (
+    <IconButton
+      className={socketClasses.receiveButton}
+      onClick={props.onReceiveClick}
+      disabled={queueEmpty}
+    >
+      <ArrowUpward />
+    </IconButton>
+  );
+
   return (
     <div className={clsx(socketClasses.socket, props.className)}>
-      <div className={socketClasses.line}></div>
+      {queueEmpty ? (
+        receiveButton
+      ) : (
+        <Tooltip title="Receive next operation from client">{receiveButton}</Tooltip>
+      )}
+      <div className={socketClasses.line} />
       {props.queue.map((operationWithRevision, i) => (
         <OperationInSocket
           key={operationWithRevision.key}
@@ -137,11 +161,13 @@ export interface ClientAndSocketsVisualizationProps {
   className: string;
   state: ClientAndSocketsVisualizationState;
   onClientOperation: (operation: TextOperation) => void;
+  onServerReceiveClick: () => void;
 }
 
 const editorConfiguration: EditorConfiguration = {
   lineNumbers: true,
 };
+
 export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVisualizationProps> = (
   props,
 ) => {
@@ -156,10 +182,10 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
   const onChanges = useCallback(
     (editor: Editor, changes: EditorChangeLinkedList[]) => {
       console.log("onChanges called with ", editor, changes); // TODO: remove
-      const [
-        operation,
-        inverse,
-      ] = CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, editor);
+      const [operation, inverse] = CodeMirrorAdapter.operationFromCodeMirrorChanges(
+        changes,
+        editor,
+      );
       console.log("operation=", operation); // TODO
       console.log("inverse=", inverse); // TODO
       onClientOperation(operation);
@@ -182,10 +208,14 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
         <ToServerSocket
           className={clientClasses.toServerSocket}
           queue={props.state.toServer}
+          onReceiveClick={props.onServerReceiveClick}
         />
       </div>
       <div className={clsx(sharedClasses.site, clientClasses.client)}>
-        <h2>{props.clientName}</h2>
+        <h2>
+          <Computer />
+          {props.clientName}
+        </h2>
         <CodeMirror
           className={clientClasses.codeMirrorContainer}
           options={editorConfiguration}

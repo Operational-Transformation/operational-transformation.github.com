@@ -1,43 +1,31 @@
-import React, { FunctionComponent, useState } from "react";
+import React, { useState } from "react";
 import { createUseStyles } from "react-jss";
-import clsx from "clsx";
 import {
   aliceLens,
   bobLens,
   ClientAndSocketsVisualizationState,
   ClientStateStatus,
-  clientUserOperation,
   Lens,
-  ServerVisualizationState,
+  onClientOperation,
+  onServerReceive,
   VisualizationState,
 } from "./visualizationState";
 import {
   ClientAndSocketsVisualization,
   ClientAndSocketsVisualizationProps,
 } from "./ClientAndSocketsVisualization";
-import { useSharedStyles } from "./sharedStyles";
+import { ServerVisualization } from "./ServerVisualization";
 
 const useStyles = createUseStyles({
   container: {
     position: "relative",
   },
-  server: {
-    width: "940px",
-    height: "130px",
-    position: "absolute",
-    left: "0px",
-    top: "0px",
+  clients: {
+    display: "flex",
+    flexDirection: "row",
   },
-  alice: {
-    position: "absolute",
-    left: "0px",
-    top: "130px",
-  },
-  bob: {
-    position: "absolute",
-    right: "0px",
-    top: "130px",
-  },
+  alice: {},
+  bob: {},
 });
 
 const initialText = "Lorem ipsum";
@@ -65,59 +53,45 @@ const initialVisualizationState: VisualizationState = {
 export const Visualization = () => {
   const classes = useStyles();
 
-  const [visualizationState, setVisualizationState] = useState<
-    VisualizationState
-  >(initialVisualizationState);
+  const [visualizationState, setVisualizationState] = useState<VisualizationState>(
+    initialVisualizationState,
+  );
 
   const makeClientProps = (
     clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
     clientName: string,
   ): Pick<
     ClientAndSocketsVisualizationProps,
-    "state" | "onClientOperation"
+    "state" | "onClientOperation" | "onServerReceiveClick"
   > => ({
     state: clientLens.get(visualizationState),
     onClientOperation: (operation) => {
-      const newClientState = clientUserOperation(
-        clientLens.get(visualizationState),
-        operation,
-        clientName,
+      setVisualizationState((visualizationState) =>
+        onClientOperation(visualizationState, clientLens, clientName, operation),
       );
-      setVisualizationState(clientLens.set(visualizationState, newClientState));
+    },
+    onServerReceiveClick: () => {
+      setVisualizationState((visualizationState) =>
+        onServerReceive(visualizationState, clientLens),
+      );
     },
   });
 
   return (
     <div className={classes.container}>
       <ServerVisualization state={visualizationState.server} />
-      <ClientAndSocketsVisualization
-        clientName="Alice"
-        className={classes.alice}
-        {...makeClientProps(aliceLens, "alice")}
-      />
-      <ClientAndSocketsVisualization
-        clientName="Bob"
-        className={classes.bob}
-        {...makeClientProps(bobLens, "bob")}
-      />
-    </div>
-  );
-};
-
-interface ServerVisualizationProps {
-  state: ServerVisualizationState;
-}
-
-const ServerVisualization: FunctionComponent<ServerVisualizationProps> = (
-  props,
-) => {
-  const classes = useStyles();
-  const sharedClasses = useSharedStyles();
-
-  return (
-    <div className={clsx(sharedClasses.site, classes.server)}>
-      <h2>Server</h2>
-      <p>Doc: {props.state.text.replace(/\n/g, "\\n")}</p>
+      <div className={classes.clients}>
+        <ClientAndSocketsVisualization
+          clientName="Alice"
+          className={classes.alice}
+          {...makeClientProps(aliceLens, "alice")}
+        />
+        <ClientAndSocketsVisualization
+          clientName="Bob"
+          className={classes.bob}
+          {...makeClientProps(bobLens, "bob")}
+        />
+      </div>
     </div>
   );
 };

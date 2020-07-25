@@ -18,9 +18,7 @@ function App() {
 
   return (
     <div className={classes.wrapper}>
-      <h1 className={classes.header}>
-        Visualization of OT with a central server
-      </h1>
+      <h1 className={classes.header}>Visualization of OT with a central server</h1>
       <Visualization />
     </div>
   );
