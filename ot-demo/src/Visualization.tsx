@@ -4,7 +4,7 @@ import {
   aliceLens,
   bobLens,
   ClientAndSocketsVisualizationState,
-  ClientStateStatus,
+  SynchronizationStateStatus,
   Lens,
   onClientOperation,
   onServerReceive,
@@ -35,7 +35,7 @@ const initialClientAndSocketsVisualizationState: ClientAndSocketsVisualizationSt
   toServer: [],
   fromServer: [],
   synchronizationState: {
-    status: ClientStateStatus.SYNCHRONIZED,
+    status: SynchronizationStateStatus.SYNCHRONIZED,
     serverRevision: initialRevision,
   },
   text: initialText,

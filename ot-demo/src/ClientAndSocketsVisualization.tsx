@@ -2,6 +2,8 @@ import {
   ClientAndSocketsVisualizationState,
   OperationAndRevision,
   Queue,
+  SynchronizationState,
+  SynchronizationStateStatus,
 } from "./visualizationState";
 import { TextOperation } from "ot";
 import { createUseStyles } from "react-jss";
@@ -16,16 +18,13 @@ import Tooltip from "@material-ui/core/Tooltip";
 import ArrowUpward from "@material-ui/icons/ArrowUpward";
 import ArrowDownward from "@material-ui/icons/ArrowDownward";
 import Computer from "@material-ui/icons/Computer";
+import { OperationVisualization } from "./OperationVisualization";
 
-const useOperationStyles = createUseStyles({
-  operation: {
+const useSocketOperationStyles = createUseStyles({
+  operationInSocket: {
     position: "absolute",
+    transform: "translate(-50%, -50%)",
     zIndex: "-1",
-    width: "20px",
-    height: "20px",
-    borderRadius: "10px",
-    transform: "translate(-10px, -10px)",
-    background: "#888",
     transitionProperty: "top",
     transitionDuration: "0.5s",
   },
@@ -38,7 +37,7 @@ interface OperationInSocketProps {
 }
 
 const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => {
-  const classes = useOperationStyles();
+  const classes = useSocketOperationStyles();
 
   const [initialRender, setInitialRender] = useState<boolean>(true);
 
@@ -52,8 +51,9 @@ const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => 
   }, []);
 
   return (
-    <div
-      className={classes.operation}
+    <OperationVisualization
+      operation={props.operation}
+      className={classes.operationInSocket}
       style={
         initialRender
           ? { top: props.initialPositionTop }
@@ -155,6 +155,14 @@ const useClientStyles = createUseStyles({
     position: "relative",
     height: "150px",
   },
+  synchronizationState: {
+    lineHeight: "24px",
+    margin: "0 0 12px",
+  },
+  synchronizationStateOperation: {
+    margin: "0 2px",
+    verticalAlign: "middle",
+  },
   codeMirrorContainer: {
     border: "1px solid #ccc",
     flex: "1",
@@ -163,6 +171,42 @@ const useClientStyles = createUseStyles({
     },
   },
 });
+
+const SynchronizationStateVisualization: FunctionComponent<{
+  synchronizationState: SynchronizationState;
+}> = ({ synchronizationState }) => {
+  const clientClasses = useClientStyles();
+
+  switch (synchronizationState.status) {
+    case SynchronizationStateStatus.SYNCHRONIZED:
+      return <p className={clientClasses.synchronizationState}>State: Synchronized</p>;
+    case SynchronizationStateStatus.AWAITING_ACK:
+      return (
+        <p className={clientClasses.synchronizationState}>
+          State: Awaiting operation{" "}
+          <OperationVisualization
+            operation={synchronizationState.expectedOperation}
+            className={clientClasses.synchronizationStateOperation}
+          />
+        </p>
+      );
+    case SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION:
+      return (
+        <p className={clientClasses.synchronizationState}>
+          State: Awaiting operation{" "}
+          <OperationVisualization
+            operation={synchronizationState.expectedOperation}
+            className={clientClasses.synchronizationStateOperation}
+          />{" "}
+          with buffer{" "}
+          <OperationVisualization
+            operation={synchronizationState.buffer}
+            className={clientClasses.synchronizationStateOperation}
+          />
+        </p>
+      );
+  }
+};
 
 export interface ClientAndSocketsVisualizationProps {
   clientName: string;
@@ -234,6 +278,9 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
           <Computer />
           {props.clientName}
         </h2>
+        <SynchronizationStateVisualization
+          synchronizationState={props.state.synchronizationState}
+        />
         <CodeMirror
           className={clientClasses.codeMirrorContainer}
           options={editorConfiguration}

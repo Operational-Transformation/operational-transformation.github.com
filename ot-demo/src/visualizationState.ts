@@ -16,7 +16,7 @@ export interface ServerVisualizationState {
   text: string;
 }
 
-export enum ClientStateStatus {
+export enum SynchronizationStateStatus {
   SYNCHRONIZED = "SYNCHRONIZED",
   AWAITING_ACK = "AWAITING_ACK",
   AWAITING_ACK_WITH_OPERATION = "AWAITING_ACK_WITH_OPERATION",
@@ -27,18 +27,18 @@ interface BaseSynchronizationState {
 }
 
 interface SynchronizationStateSynchronized extends BaseSynchronizationState {
-  status: ClientStateStatus.SYNCHRONIZED;
+  status: SynchronizationStateStatus.SYNCHRONIZED;
 }
 
 interface SynchronizationStateAwaitingAck extends BaseSynchronizationState {
-  status: ClientStateStatus.AWAITING_ACK;
-  expectedOperation: TextOperation;
+  status: SynchronizationStateStatus.AWAITING_ACK;
+  expectedOperation: Operation;
 }
 
 interface SynchronizationStateAwaitingAckWithOperation extends BaseSynchronizationState {
-  status: ClientStateStatus.AWAITING_ACK_WITH_OPERATION;
-  expectedOperation: TextOperation;
-  buffer: TextOperation;
+  status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION;
+  expectedOperation: Operation;
+  buffer: Operation;
 }
 
 export type SynchronizationState =
@@ -115,36 +115,47 @@ function processClientUserOperation(
   operationsToSendToServer: OperationAndRevision[];
 } {
   switch (synchronizationState.status) {
-    case ClientStateStatus.SYNCHRONIZED:
+    case SynchronizationStateStatus.SYNCHRONIZED: {
       const revision = synchronizationState.serverRevision;
+      const key = `${clientName}-${revision}`;
       return {
         newSynchronizationState: {
-          status: ClientStateStatus.AWAITING_ACK,
+          status: SynchronizationStateStatus.AWAITING_ACK,
           serverRevision: synchronizationState.serverRevision,
-          expectedOperation: textOperation,
+          expectedOperation: { key, textOperation },
         },
-        operationsToSendToServer: [{ revision, textOperation, key: `${clientName}-${revision}` }],
+        operationsToSendToServer: [{ revision, textOperation, key }],
       };
-    case ClientStateStatus.AWAITING_ACK:
+    }
+    case SynchronizationStateStatus.AWAITING_ACK: {
+      const key = `${clientName}-${synchronizationState.serverRevision + 1}`;
       return {
         newSynchronizationState: {
-          status: ClientStateStatus.AWAITING_ACK_WITH_OPERATION,
+          status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
           serverRevision: synchronizationState.serverRevision,
           expectedOperation: synchronizationState.expectedOperation,
-          buffer: textOperation,
+          buffer: {
+            textOperation,
+            key,
+          },
         },
         operationsToSendToServer: [],
       };
-    case ClientStateStatus.AWAITING_ACK_WITH_OPERATION:
+    }
+    case SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION: {
       return {
         newSynchronizationState: {
-          status: ClientStateStatus.AWAITING_ACK_WITH_OPERATION,
+          status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
           serverRevision: synchronizationState.serverRevision,
           expectedOperation: synchronizationState.expectedOperation,
-          buffer: synchronizationState.buffer.compose(textOperation),
+          buffer: {
+            key: synchronizationState.buffer.key,
+            textOperation: synchronizationState.buffer.textOperation.compose(textOperation),
+          },
         },
         operationsToSendToServer: [],
       };
+    }
   }
 }
 
