@@ -7,7 +7,7 @@ import {
 } from "./visualizationState";
 import { TextOperation } from "ot";
 import { createUseStyles } from "react-jss";
-import React, { FunctionComponent, useCallback, useEffect, useState } from "react";
+import React, { FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
 import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
 import clsx from "clsx";
@@ -214,6 +214,7 @@ export interface ClientAndSocketsVisualizationProps {
   state: ClientAndSocketsVisualizationState;
   onClientOperation: (operation: TextOperation) => void;
   onServerReceiveClick: () => void;
+  onClientReceiveClick: () => TextOperation | undefined;
 }
 
 const editorConfiguration: EditorConfiguration = {
@@ -223,26 +224,29 @@ const editorConfiguration: EditorConfiguration = {
 export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVisualizationProps> = (
   props,
 ) => {
-  const { onClientOperation } = props;
+  const { onClientOperation, onClientReceiveClick } = props;
   const clientClasses = useClientStyles();
   const sharedClasses = useSharedStyles();
 
   const [initialText] = useState(() => props.state.text);
 
   const [editor, setEditor] = useState<Editor | undefined>(undefined);
+  const applyingOperationFromServerRef = useRef<boolean>(false);
 
   const onChanges = useCallback(
     (editor: Editor, changes: EditorChangeLinkedList[]) => {
-      console.log("onChanges called with ", editor, changes); // TODO: remove
-      const [operation, inverse] = CodeMirrorAdapter.operationFromCodeMirrorChanges(
-        changes,
-        editor,
-      );
-      console.log("operation=", operation); // TODO
-      console.log("inverse=", inverse); // TODO
-      onClientOperation(operation);
+      if (!applyingOperationFromServerRef.current) {
+        console.log("onChanges called with ", editor, changes); // TODO: remove
+        const [operation, inverse] = CodeMirrorAdapter.operationFromCodeMirrorChanges(
+          changes,
+          editor,
+        );
+        console.log("operation=", operation); // TODO
+        console.log("inverse=", inverse); // TODO
+        onClientOperation(operation);
+      }
     },
-    [onClientOperation],
+    [onClientOperation, applyingOperationFromServerRef],
   );
 
   useEffect(() => {
@@ -253,6 +257,15 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
       };
     }
   }, [editor, onChanges]);
+
+  const onClientReceive = useCallback(() => {
+    const textOperationToApply = onClientReceiveClick();
+    if (textOperationToApply !== undefined && editor !== undefined) {
+      applyingOperationFromServerRef.current = true;
+      CodeMirrorAdapter.applyOperationToCodeMirror(textOperationToApply, editor);
+      applyingOperationFromServerRef.current = false;
+    }
+  }, [editor, onClientReceiveClick]);
 
   return (
     <div className={props.className}>
@@ -267,10 +280,7 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
           direction={SocketDirection.DOWN}
           tooltip="Receive next operation from server"
           queue={props.state.fromServer}
-          onReceiveClick={() => {
-            alert("To Client Socket Receive Click");
-            /* TODO */
-          }}
+          onReceiveClick={onClientReceive}
         />
       </div>
       <div className={clsx(sharedClasses.site, clientClasses.client)}>

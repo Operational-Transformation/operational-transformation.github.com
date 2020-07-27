@@ -21,5 +21,5 @@ interface OperationProps {
 
 export const OperationVisualization: FunctionComponent<OperationProps> = (props) => {
   const classes = useOperationStyles();
-  return <div className={clsx(classes.operation, props.className)} style={props.style} />;
+  return <span className={clsx(classes.operation, props.className)} style={props.style} />;
 };

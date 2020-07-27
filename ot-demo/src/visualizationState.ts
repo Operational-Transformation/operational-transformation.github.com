@@ -22,23 +22,20 @@ export enum SynchronizationStateStatus {
   AWAITING_ACK_WITH_OPERATION = "AWAITING_ACK_WITH_OPERATION",
 }
 
-interface BaseSynchronizationState {
+interface SynchronizationStateSynchronized {
+  status: SynchronizationStateStatus.SYNCHRONIZED;
   serverRevision: number; // non-negative integer
 }
 
-interface SynchronizationStateSynchronized extends BaseSynchronizationState {
-  status: SynchronizationStateStatus.SYNCHRONIZED;
-}
-
-interface SynchronizationStateAwaitingAck extends BaseSynchronizationState {
+interface SynchronizationStateAwaitingAck {
   status: SynchronizationStateStatus.AWAITING_ACK;
-  expectedOperation: Operation;
+  expectedOperation: OperationAndRevision;
 }
 
-interface SynchronizationStateAwaitingAckWithOperation extends BaseSynchronizationState {
+interface SynchronizationStateAwaitingAckWithOperation {
   status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION;
-  expectedOperation: Operation;
-  buffer: Operation;
+  expectedOperation: OperationAndRevision;
+  buffer: OperationAndRevision;
 }
 
 export type SynchronizationState =
@@ -65,6 +62,14 @@ const transformTextOperation = (
 ): [TextOperation, TextOperation] =>
   (TextOperation.transform(a, b) as unknown) as [TextOperation, TextOperation]; // because type definition is wrong
 
+const transformOperation = (
+  a: TextOperation, // server operation
+  b: OperationAndRevision, // client operation
+): [TextOperation, OperationAndRevision] => {
+  const [aPrime, bTextPrime] = transformTextOperation(a, b.textOperation);
+  return [aPrime, { textOperation: bTextPrime, key: b.key, revision: b.revision + 1 }];
+};
+
 function receiveOperationFromClient(
   server: ServerVisualizationState,
   operation: OperationAndRevision,
@@ -74,21 +79,16 @@ function receiveOperationFromClient(
 } {
   const concurrentOperations = server.operations.slice(operation.revision);
 
-  const transformedTextOperation = concurrentOperations.reduce(
-    (op, concurrentOp) => transformTextOperation(op, concurrentOp.textOperation)[0],
-    operation.textOperation,
+  const transformedOperation = concurrentOperations.reduce<OperationAndRevision>(
+    (op, concurrentOp) => transformOperation(concurrentOp.textOperation, op)[1],
+    operation,
   );
 
-  const operationToBroadcast: OperationAndRevision = {
-    key: operation.key,
-    textOperation: transformedTextOperation,
-    revision: server.operations.length,
-  };
   const newServerState: ServerVisualizationState = {
-    operations: [...server.operations, operationToBroadcast],
-    text: transformedTextOperation.apply(server.text),
+    operations: [...server.operations, transformedOperation],
+    text: transformedOperation.textOperation.apply(server.text),
   };
-  return { operationToBroadcast, newServerState };
+  return { operationToBroadcast: transformedOperation, newServerState };
 }
 
 export interface Lens<S, A> {
@@ -121,22 +121,22 @@ function processClientUserOperation(
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_ACK,
-          serverRevision: synchronizationState.serverRevision,
-          expectedOperation: { key, textOperation },
+          expectedOperation: { key, textOperation, revision },
         },
         operationsToSendToServer: [{ revision, textOperation, key }],
       };
     }
     case SynchronizationStateStatus.AWAITING_ACK: {
-      const key = `${clientName}-${synchronizationState.serverRevision + 1}`;
+      const revision = synchronizationState.expectedOperation.revision + 1;
+      const key = `${clientName}-${revision}`;
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
-          serverRevision: synchronizationState.serverRevision,
           expectedOperation: synchronizationState.expectedOperation,
           buffer: {
             textOperation,
             key,
+            revision,
           },
         },
         operationsToSendToServer: [],
@@ -146,10 +146,10 @@ function processClientUserOperation(
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
-          serverRevision: synchronizationState.serverRevision,
           expectedOperation: synchronizationState.expectedOperation,
           buffer: {
             key: synchronizationState.buffer.key,
+            revision: synchronizationState.buffer.revision,
             textOperation: synchronizationState.buffer.textOperation.compose(textOperation),
           },
         },
@@ -192,7 +192,7 @@ export function onClientOperation(
   return clientLens.set(visualizationState, newClientState);
 }
 
-function sendOperation(
+function sendOperationToClient(
   client: ClientAndSocketsVisualizationState,
   operation: OperationAndRevision,
 ): ClientAndSocketsVisualizationState {
@@ -216,7 +216,133 @@ export function onServerReceive(
   );
   return {
     server: newServerState,
-    alice: sendOperation(nextVisualizationState.alice, operationToBroadcast),
-    bob: sendOperation(nextVisualizationState.bob, operationToBroadcast),
+    alice: sendOperationToClient(nextVisualizationState.alice, operationToBroadcast),
+    bob: sendOperationToClient(nextVisualizationState.bob, operationToBroadcast),
   };
+}
+
+function processOperationFromServer(
+  synchronizationState: SynchronizationState,
+  receivedOperation: Operation,
+): {
+  newSynchronizationState: SynchronizationState;
+  operationToSendToServer: OperationAndRevision | undefined;
+  transformedReceivedOperationToApply: TextOperation | undefined;
+} {
+  switch (synchronizationState.status) {
+    case SynchronizationStateStatus.SYNCHRONIZED: {
+      const newSynchronizationState: SynchronizationState = {
+        status: SynchronizationStateStatus.SYNCHRONIZED,
+        serverRevision: synchronizationState.serverRevision + 1,
+      };
+      return {
+        newSynchronizationState,
+        operationToSendToServer: undefined,
+        transformedReceivedOperationToApply: receivedOperation.textOperation,
+      };
+    }
+    case SynchronizationStateStatus.AWAITING_ACK: {
+      const { expectedOperation } = synchronizationState;
+      if (receivedOperation.key === expectedOperation.key) {
+        const newSynchronizationState: SynchronizationState = {
+          status: SynchronizationStateStatus.SYNCHRONIZED,
+          serverRevision: expectedOperation.revision + 1,
+        };
+        return {
+          newSynchronizationState,
+          operationToSendToServer: undefined,
+          transformedReceivedOperationToApply: undefined,
+        };
+      } else {
+        const [transformedReceivedOperation, transformedExpectedOperation] = transformOperation(
+          receivedOperation.textOperation,
+          expectedOperation,
+        );
+        const newSynchronizationState: SynchronizationState = {
+          status: SynchronizationStateStatus.AWAITING_ACK,
+          expectedOperation: transformedExpectedOperation,
+        };
+        return {
+          newSynchronizationState,
+          operationToSendToServer: undefined,
+          transformedReceivedOperationToApply: transformedReceivedOperation,
+        };
+      }
+    }
+    case SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION: {
+      const { expectedOperation, buffer } = synchronizationState;
+      if (receivedOperation.key === expectedOperation.key) {
+        const newSynchronizationState: SynchronizationState = {
+          status: SynchronizationStateStatus.AWAITING_ACK,
+          expectedOperation: synchronizationState.buffer,
+        };
+        return {
+          newSynchronizationState,
+          operationToSendToServer: synchronizationState.buffer,
+          transformedReceivedOperationToApply: undefined,
+        };
+      } else {
+        const [
+          onceTransformedReceivedTextOperation,
+          transformedExpectedOperation,
+        ] = transformOperation(receivedOperation.textOperation, expectedOperation);
+        const [transformedReceivedOperation, transformedBuffer] = transformOperation(
+          onceTransformedReceivedTextOperation,
+          buffer,
+        );
+        const newSynchronizationState: SynchronizationState = {
+          status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
+          expectedOperation: transformedExpectedOperation,
+          buffer: transformedBuffer,
+        };
+        return {
+          newSynchronizationState,
+          operationToSendToServer: undefined,
+          transformedReceivedOperationToApply: transformedReceivedOperation,
+        };
+      }
+    }
+  }
+}
+
+function clientReceiveOperation({
+  synchronizationState,
+  fromServer,
+  toServer,
+  text,
+}: ClientAndSocketsVisualizationState): {
+  newClientState: ClientAndSocketsVisualizationState;
+  transformedReceivedOperationToApply: TextOperation | undefined;
+} {
+  const [operation, ...remainingOperations] = fromServer;
+  const {
+    newSynchronizationState,
+    operationToSendToServer,
+    transformedReceivedOperationToApply,
+  } = processOperationFromServer(synchronizationState, operation);
+  const newClientState = {
+    synchronizationState: newSynchronizationState,
+    text:
+      transformedReceivedOperationToApply === undefined
+        ? text
+        : transformedReceivedOperationToApply.apply(text),
+    toServer:
+      operationToSendToServer === undefined ? toServer : [...toServer, operationToSendToServer],
+    fromServer: remainingOperations,
+  };
+  return { newClientState, transformedReceivedOperationToApply };
+}
+
+export function onClientReceive(
+  visualizationState: VisualizationState,
+  clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
+): {
+  newState: VisualizationState;
+  transformedReceivedOperationToApply: TextOperation | undefined;
+} {
+  const { newClientState, transformedReceivedOperationToApply } = clientReceiveOperation(
+    clientLens.get(visualizationState),
+  );
+  const newState = clientLens.set(visualizationState, newClientState);
+  return { newState, transformedReceivedOperationToApply };
 }
