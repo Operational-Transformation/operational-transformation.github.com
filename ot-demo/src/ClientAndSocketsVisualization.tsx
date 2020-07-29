@@ -23,8 +23,7 @@ import { OperationVisualization } from "./OperationVisualization";
 const useSocketOperationStyles = createUseStyles({
   operationInSocket: {
     position: "absolute",
-    transform: "translate(-50%, -50%)",
-    zIndex: "-1",
+    transform: "translate(0, -50%)",
     transitionProperty: "top",
     transitionDuration: "0.5s",
   },
@@ -80,6 +79,14 @@ const useSocketStyles = createUseStyles({
     borderLeft: "2px dashed #eee",
     zIndex: "-1",
   },
+  operations: {
+    position: "relative",
+    height: "100%",
+    width: "20px",
+    left: "-10px",
+    overflowY: "hidden",
+    overflowX: "visible",
+  },
   receiveButton: {
     // specificity hack
     "&$receiveButton": {
@@ -87,6 +94,7 @@ const useSocketStyles = createUseStyles({
       position: "absolute",
       padding: "2px",
       transform: "translate(-50%, -50%)",
+      zIndex: "1",
       "&:hover": {
         backgroundColor: "#7faaff",
       },
@@ -142,26 +150,28 @@ const Socket: FunctionComponent<SocketProps> = ({ queue, onReceiveClick, directi
     <div className={socketClasses.socket}>
       {queueEmpty ? receiveButton : <Tooltip title={tooltip}>{receiveButton}</Tooltip>}
       <div className={socketClasses.line} />
-      {[
-        ...leavingOps.map((operation) => (
-          <OperationInSocket
-            key={operation.key}
-            operation={operation}
-            positionTop={`calc(${positionInverter} 0px)`}
-            onTransitionEnd={() =>
-              setDelayedQueue((delayedQueue) => delayedQueue.filter((o) => o !== operation))
-            }
-          />
-        )),
-        ...queue.map((operation, i) => (
-          <OperationInSocket
-            key={operation.key}
-            operation={operation}
-            positionTop={`calc(${positionInverter} 100% / ${queue.length + 1} * ${i + 1})`}
-            initialPositionTop={`calc(${positionInverter} (100% + 20px))`}
-          />
-        )),
-      ]}
+      <div className={socketClasses.operations}>
+        {[
+          ...leavingOps.map((operation) => (
+            <OperationInSocket
+              key={operation.key}
+              operation={operation}
+              positionTop={`calc(${positionInverter} 0px)`}
+              onTransitionEnd={() =>
+                setDelayedQueue((delayedQueue) => delayedQueue.filter((o) => o !== operation))
+              }
+            />
+          )),
+          ...queue.map((operation, i) => (
+            <OperationInSocket
+              key={operation.key}
+              operation={operation}
+              positionTop={`calc(${positionInverter} 100% / ${queue.length + 1} * ${i + 1})`}
+              initialPositionTop={`calc(${positionInverter} (100% + 20px))`}
+            />
+          )),
+        ]}
+      </div>
     </div>
   );
 };
@@ -261,13 +271,10 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
   const onChanges = useCallback(
     (editor: Editor, changes: EditorChangeLinkedList[]) => {
       if (!applyingOperationFromServerRef.current) {
-        console.log("onChanges called with ", editor, changes); // TODO: remove
         const [operation, inverse] = CodeMirrorAdapter.operationFromCodeMirrorChanges(
           changes,
           editor,
         );
-        console.log("operation=", operation); // TODO
-        console.log("inverse=", inverse); // TODO
         onClientOperation(operation);
       }
     },
