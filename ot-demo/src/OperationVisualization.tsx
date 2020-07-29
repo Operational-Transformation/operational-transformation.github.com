@@ -1,5 +1,5 @@
 import { Operation } from "./visualizationState";
-import React, { CSSProperties, FunctionComponent } from "react";
+import React, { FunctionComponent } from "react";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 
@@ -13,13 +13,12 @@ const useOperationStyles = createUseStyles({
   },
 });
 
-interface OperationProps {
+interface OperationProps extends React.HTMLAttributes<HTMLSpanElement> {
   operation: Operation;
-  className?: string;
-  style?: CSSProperties;
 }
 
 export const OperationVisualization: FunctionComponent<OperationProps> = (props) => {
   const classes = useOperationStyles();
-  return <span className={clsx(classes.operation, props.className)} style={props.style} />;
+  const { className, ...otherProps } = props;
+  return <span className={clsx(classes.operation, props.className)} {...otherProps} />;
 };

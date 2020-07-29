@@ -32,8 +32,9 @@ const useSocketOperationStyles = createUseStyles({
 
 interface OperationInSocketProps {
   operation: OperationAndRevision;
-  initialPositionTop: string;
+  initialPositionTop?: string;
   positionTop?: string;
+  onTransitionEnd?: () => void;
 }
 
 const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => {
@@ -55,12 +56,13 @@ const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => 
       operation={props.operation}
       className={classes.operationInSocket}
       style={
-        initialRender
+        initialRender && props.initialPositionTop !== undefined
           ? { top: props.initialPositionTop }
           : props.positionTop !== undefined
           ? { top: props.positionTop }
           : undefined
       }
+      onTransitionEnd={props.onTransitionEnd}
     />
   );
 };
@@ -107,36 +109,59 @@ interface SocketProps {
   onReceiveClick: () => void;
 }
 
-const Socket: FunctionComponent<SocketProps> = (props) => {
+const Socket: FunctionComponent<SocketProps> = ({ queue, onReceiveClick, direction, tooltip }) => {
   const socketClasses = useSocketStyles();
 
-  const queueEmpty = props.queue.length === 0;
+  const queueEmpty = queue.length === 0;
 
-  const positionInverter = props.direction === SocketDirection.DOWN ? "100% -" : "";
+  const [delayedQueue, setDelayedQueue] = useState<typeof queue>([]);
+
+  useEffect(() => {
+    setDelayedQueue((delayedQueue) => [
+      ...delayedQueue.filter((operation) => !queue.includes(operation)),
+      ...queue,
+    ]);
+  }, [queue]);
+
+  const positionInverter = direction === SocketDirection.DOWN ? "100% -" : "";
 
   const receiveButton = (
     <IconButton
       className={socketClasses.receiveButton}
-      onClick={props.onReceiveClick}
+      onClick={onReceiveClick}
       disabled={queueEmpty}
       style={{ top: `calc(${positionInverter} 0%)` }}
     >
-      {props.direction === SocketDirection.UP ? <ArrowUpward /> : <ArrowDownward />}
+      {direction === SocketDirection.UP ? <ArrowUpward /> : <ArrowDownward />}
     </IconButton>
   );
 
+  const leavingOps = delayedQueue.filter((operation) => !queue.includes(operation));
+
   return (
     <div className={socketClasses.socket}>
-      {queueEmpty ? receiveButton : <Tooltip title={props.tooltip}>{receiveButton}</Tooltip>}
+      {queueEmpty ? receiveButton : <Tooltip title={tooltip}>{receiveButton}</Tooltip>}
       <div className={socketClasses.line} />
-      {props.queue.map((operationWithRevision, i) => (
-        <OperationInSocket
-          key={operationWithRevision.key}
-          operation={operationWithRevision}
-          positionTop={`calc(${positionInverter} 100% / ${props.queue.length + 1} * ${i + 1})`}
-          initialPositionTop={`calc(${positionInverter} (100% + 20px))`}
-        />
-      ))}
+      {[
+        ...leavingOps.map((operation) => (
+          <OperationInSocket
+            key={operation.key}
+            operation={operation}
+            positionTop={`calc(${positionInverter} 0px)`}
+            onTransitionEnd={() =>
+              setDelayedQueue((delayedQueue) => delayedQueue.filter((o) => o !== operation))
+            }
+          />
+        )),
+        ...queue.map((operation, i) => (
+          <OperationInSocket
+            key={operation.key}
+            operation={operation}
+            positionTop={`calc(${positionInverter} 100% / ${queue.length + 1} * ${i + 1})`}
+            initialPositionTop={`calc(${positionInverter} (100% + 20px))`}
+          />
+        )),
+      ]}
     </div>
   );
 };
