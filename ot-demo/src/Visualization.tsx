@@ -4,12 +4,13 @@ import {
   aliceLens,
   bobLens,
   ClientAndSocketsVisualizationState,
-  SynchronizationStateStatus,
+  ClientName,
   Lens,
   onClientOperation,
-  onServerReceive,
-  VisualizationState,
   onClientReceive,
+  onServerReceive,
+  SynchronizationStateStatus,
+  VisualizationState,
 } from "./visualizationState";
 import {
   ClientAndSocketsVisualization,
@@ -61,7 +62,7 @@ export const Visualization = () => {
 
   const makeClientProps = (
     clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
-    clientName: string,
+    clientName: ClientName,
   ): Pick<
     ClientAndSocketsVisualizationProps,
     "state" | "onClientOperation" | "onServerReceiveClick" | "onClientReceiveClick"
@@ -96,14 +97,14 @@ export const Visualization = () => {
       <ServerVisualization state={visualizationState.server} />
       <div className={classes.clients}>
         <ClientAndSocketsVisualization
-          clientName="Alice"
+          clientName={ClientName.Alice}
           className={classes.alice}
-          {...makeClientProps(aliceLens, "alice")}
+          {...makeClientProps(aliceLens, ClientName.Alice)}
         />
         <ClientAndSocketsVisualization
-          clientName="Bob"
+          clientName={ClientName.Bob}
           className={classes.bob}
-          {...makeClientProps(bobLens, "bob")}
+          {...makeClientProps(bobLens, ClientName.Bob)}
         />
       </div>
     </div>

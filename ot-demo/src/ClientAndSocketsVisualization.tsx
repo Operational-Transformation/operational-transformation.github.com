@@ -1,5 +1,6 @@
 import {
   ClientAndSocketsVisualizationState,
+  ClientName,
   OperationAndRevision,
   Queue,
   SynchronizationState,
@@ -12,12 +13,13 @@ import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror"
 import { CodeMirrorAdapter } from "./codemirror-adapter";
 import clsx from "clsx";
 import { UnControlled as CodeMirror } from "react-codemirror2";
-import { useSharedStyles } from "./sharedStyles";
+import { getClientColor, useSharedStyles } from "./sharedStyles";
 import IconButton from "@material-ui/core/IconButton";
 import Tooltip from "@material-ui/core/Tooltip";
 import ArrowUpward from "@material-ui/icons/ArrowUpward";
 import ArrowDownward from "@material-ui/icons/ArrowDownward";
 import Computer from "@material-ui/icons/Computer";
+import Tablet from "@material-ui/icons/Tablet";
 import { OperationVisualization } from "./OperationVisualization";
 
 const useSocketOperationStyles = createUseStyles({
@@ -90,16 +92,18 @@ const useSocketStyles = createUseStyles({
   receiveButton: {
     // specificity hack
     "&$receiveButton": {
-      backgroundColor: "#7FDBFF",
+      backgroundColor: "#222",
+      color: "#FFDC00",
       position: "absolute",
       padding: "2px",
       transform: "translate(-50%, -50%)",
       zIndex: "1",
       "&:hover": {
-        backgroundColor: "#7faaff",
+        backgroundColor: "#444",
       },
       "&[class*=Mui-disabled]": {
-        backgroundColor: "#ddd",
+        backgroundColor: "#ccc",
+        color: "#eee",
       },
     },
   },
@@ -148,13 +152,13 @@ const Socket: FunctionComponent<SocketProps> = ({ queue, onReceiveClick, directi
 
   return (
     <div className={socketClasses.socket}>
-      {queueEmpty ? receiveButton : <Tooltip title={tooltip}>{receiveButton}</Tooltip>}
+      <Tooltip title={queueEmpty ? "" : tooltip}>{receiveButton}</Tooltip>
       <div className={socketClasses.line} />
       <div className={socketClasses.operations}>
         {[
           ...leavingOps.map((operation) => (
             <OperationInSocket
-              key={operation.key}
+              key={operation.meta.key}
               operation={operation}
               positionTop={`calc(${positionInverter} 0px)`}
               onTransitionEnd={() =>
@@ -164,7 +168,7 @@ const Socket: FunctionComponent<SocketProps> = ({ queue, onReceiveClick, directi
           )),
           ...queue.map((operation, i) => (
             <OperationInSocket
-              key={operation.key}
+              key={operation.meta.key}
               operation={operation}
               positionTop={`calc(${positionInverter} 100% / ${queue.length + 1} * ${i + 1})`}
               initialPositionTop={`calc(${positionInverter} (100% + 20px))`}
@@ -244,7 +248,7 @@ const SynchronizationStateVisualization: FunctionComponent<{
 };
 
 export interface ClientAndSocketsVisualizationProps {
-  clientName: string;
+  clientName: ClientName;
   className: string;
   state: ClientAndSocketsVisualizationState;
   onClientOperation: (operation: TextOperation) => void;
@@ -254,6 +258,15 @@ export interface ClientAndSocketsVisualizationProps {
 
 const editorConfiguration: EditorConfiguration = {
   lineNumbers: true,
+};
+
+export const getClientIcon = (clientName: ClientName): JSX.Element => {
+  switch (clientName) {
+    case ClientName.Alice:
+      return <Computer />;
+    case ClientName.Bob:
+      return <Tablet />;
+  }
 };
 
 export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVisualizationProps> = (
@@ -271,10 +284,7 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
   const onChanges = useCallback(
     (editor: Editor, changes: EditorChangeLinkedList[]) => {
       if (!applyingOperationFromServerRef.current) {
-        const [operation, inverse] = CodeMirrorAdapter.operationFromCodeMirrorChanges(
-          changes,
-          editor,
-        );
+        const [operation] = CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, editor);
         onClientOperation(operation);
       }
     },
@@ -316,8 +326,8 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
         />
       </div>
       <div className={clsx(sharedClasses.site, clientClasses.client)}>
-        <h2>
-          <Computer />
+        <h2 style={{ color: getClientColor(props.clientName) }}>
+          {getClientIcon(props.clientName)}
           {props.clientName}
         </h2>
         <SynchronizationStateVisualization

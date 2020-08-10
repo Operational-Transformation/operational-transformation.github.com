@@ -4,6 +4,7 @@ import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import Tooltip from "@material-ui/core/Tooltip";
 import { TextOperation } from "ot";
+import { getClientColor } from "./sharedStyles";
 
 const renderOp = (op: string | number) => {
   if (typeof op === "string") {
@@ -34,7 +35,6 @@ const useOperationStyles = createUseStyles({
     width: "20px",
     height: "20px",
     borderRadius: "10px",
-    background: "#888",
   },
   tooltip: {
     // specificity hack
@@ -51,17 +51,24 @@ interface OperationProps
 
 export const OperationVisualization: FunctionComponent<OperationProps> = (props) => {
   const classes = useOperationStyles();
-  const { className, ...otherProps } = props;
+  const { className, style, ...otherProps } = props;
+  const operation = props.operation;
+  console.log(operation.meta.key);
+  console.log(getClientColor(operation.meta.author));
 
   return (
-    <>
-      <Tooltip
-        arrow={true}
-        classes={{ tooltip: classes.tooltip }}
-        title={<>{renderOperation(props.operation)}</>}
-      >
-        <span className={clsx(classes.operation, props.className)} {...otherProps} />
-      </Tooltip>
-    </>
+    <Tooltip
+      key={operation.meta.key}
+      arrow={true}
+      classes={{ tooltip: classes.tooltip }}
+      title={<>{renderOperation(operation)}</>}
+    >
+      <span
+        key={operation.meta.key}
+        className={clsx(classes.operation, props.className)}
+        style={{ background: getClientColor(operation.meta.author), ...style }}
+        {...otherProps}
+      />
+    </Tooltip>
   );
 };

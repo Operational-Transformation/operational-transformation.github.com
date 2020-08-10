@@ -1,4 +1,5 @@
 import { createUseStyles } from "react-jss";
+import { ClientName } from "./visualizationState";
 
 export const useSharedStyles = createUseStyles({
   site: {
@@ -14,3 +15,12 @@ export const useSharedStyles = createUseStyles({
     },
   },
 });
+
+export const getClientColor = (clientName: ClientName): string => {
+  switch (clientName) {
+    case ClientName.Alice:
+      return "#0074D9";
+    case ClientName.Bob:
+      return "#e2451e";
+  }
+};

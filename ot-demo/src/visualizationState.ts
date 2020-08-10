@@ -2,9 +2,19 @@ import { TextOperation } from "ot";
 
 export type Queue<A> = A[];
 
-export interface Operation {
-  textOperation: TextOperation;
+export enum ClientName {
+  Alice = "Alice",
+  Bob = "Bob",
+}
+
+interface OperationMeta {
+  author: ClientName;
   key: string;
+}
+
+export interface Operation {
+  meta: OperationMeta;
+  textOperation: TextOperation;
 }
 
 export interface OperationAndRevision extends Operation {
@@ -67,7 +77,7 @@ const transformOperation = (
   b: OperationAndRevision, // client operation
 ): [TextOperation, OperationAndRevision] => {
   const [aPrime, bTextPrime] = transformTextOperation(a, b.textOperation);
-  return [aPrime, { textOperation: bTextPrime, key: b.key, revision: b.revision + 1 }];
+  return [aPrime, { textOperation: bTextPrime, meta: b.meta, revision: b.revision + 1 }];
 };
 
 function receiveOperationFromClient(
@@ -109,7 +119,7 @@ export const bobLens: Lens<VisualizationState, ClientAndSocketsVisualizationStat
 function processClientUserOperation(
   synchronizationState: SynchronizationState,
   textOperation: TextOperation,
-  clientName: string,
+  clientName: ClientName,
 ): {
   newSynchronizationState: SynchronizationState;
   operationsToSendToServer: OperationAndRevision[];
@@ -117,25 +127,26 @@ function processClientUserOperation(
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED: {
       const revision = synchronizationState.serverRevision;
-      const key = `${clientName}-${revision}`;
+      const meta = { key: `${clientName}-${revision}`, author: clientName };
+      const operationToSendToServer = { meta, textOperation, revision };
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_ACK,
-          expectedOperation: { key, textOperation, revision },
+          expectedOperation: operationToSendToServer,
         },
-        operationsToSendToServer: [{ revision, textOperation, key }],
+        operationsToSendToServer: [operationToSendToServer],
       };
     }
     case SynchronizationStateStatus.AWAITING_ACK: {
       const revision = synchronizationState.expectedOperation.revision + 1;
-      const key = `${clientName}-${revision}`;
+      const meta = { key: `${clientName}-${revision}`, author: clientName };
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
           expectedOperation: synchronizationState.expectedOperation,
           buffer: {
             textOperation,
-            key,
+            meta,
             revision,
           },
         },
@@ -148,7 +159,7 @@ function processClientUserOperation(
           status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
           expectedOperation: synchronizationState.expectedOperation,
           buffer: {
-            key: synchronizationState.buffer.key,
+            meta: synchronizationState.buffer.meta,
             revision: synchronizationState.buffer.revision,
             textOperation: synchronizationState.buffer.textOperation.compose(textOperation),
           },
@@ -162,7 +173,7 @@ function processClientUserOperation(
 function clientUserOperation(
   client: ClientAndSocketsVisualizationState,
   operation: TextOperation,
-  clientName: string,
+  clientName: ClientName,
 ): ClientAndSocketsVisualizationState {
   const { newSynchronizationState, operationsToSendToServer } = processClientUserOperation(
     client.synchronizationState,
@@ -181,7 +192,7 @@ function clientUserOperation(
 export function onClientOperation(
   visualizationState: VisualizationState,
   clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
-  clientName: string,
+  clientName: ClientName,
   operation: TextOperation,
 ): VisualizationState {
   const newClientState = clientUserOperation(
@@ -243,7 +254,7 @@ function processOperationFromServer(
     }
     case SynchronizationStateStatus.AWAITING_ACK: {
       const { expectedOperation } = synchronizationState;
-      if (receivedOperation.key === expectedOperation.key) {
+      if (receivedOperation.meta.key === expectedOperation.meta.key) {
         const newSynchronizationState: SynchronizationState = {
           status: SynchronizationStateStatus.SYNCHRONIZED,
           serverRevision: expectedOperation.revision + 1,
@@ -271,7 +282,7 @@ function processOperationFromServer(
     }
     case SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION: {
       const { expectedOperation, buffer } = synchronizationState;
-      if (receivedOperation.key === expectedOperation.key) {
+      if (receivedOperation.meta.key === expectedOperation.meta.key) {
         const newSynchronizationState: SynchronizationState = {
           status: SynchronizationStateStatus.AWAITING_ACK,
           expectedOperation: synchronizationState.buffer,
