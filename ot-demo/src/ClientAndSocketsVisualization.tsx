@@ -10,6 +10,7 @@ import { TextOperation } from "ot";
 import { createUseStyles } from "react-jss";
 import React, { FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
 import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
+import "cm-show-invisibles";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
 import clsx from "clsx";
 import { UnControlled as CodeMirror } from "react-codemirror2";
@@ -183,7 +184,6 @@ const Socket: FunctionComponent<SocketProps> = ({ queue, onReceiveClick, directi
 const useClientStyles = createUseStyles({
   client: {
     width: "460px",
-    height: "230px",
     display: "flex",
     flexDirection: "column",
   },
@@ -206,7 +206,11 @@ const useClientStyles = createUseStyles({
     border: "1px solid #ccc",
     flex: "1",
     "& .CodeMirror": {
-      height: "100%",
+      height: "150px",
+    },
+    // workaround for https://github.com/coderaiser/cm-show-invisibles/issues/12
+    "& .CodeMirror-code > div:last-child > pre > span::after": {
+      display: "none",
     },
   },
 });
@@ -256,8 +260,15 @@ export interface ClientAndSocketsVisualizationProps {
   onClientReceiveClick: () => TextOperation | undefined;
 }
 
+declare module "codemirror" {
+  interface EditorConfiguration {
+    showInvisibles: true; // provided by addon 'cm-show-invisibles'
+  }
+}
+
 const editorConfiguration: EditorConfiguration = {
   lineNumbers: true,
+  showInvisibles: true,
 };
 
 export const getClientIcon = (clientName: ClientName): JSX.Element => {

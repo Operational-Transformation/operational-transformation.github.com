@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from "react";
-import { useSharedStyles } from "./sharedStyles";
+import { replaceInvisibleCharacters, useSharedStyles } from "./sharedStyles";
 import clsx from "clsx";
 import StorageIcon from "@material-ui/icons/Storage";
 import { ServerVisualizationState } from "./visualizationState";
@@ -31,7 +31,8 @@ export const ServerVisualization: FunctionComponent<ServerVisualizationProps> = 
         Central Server
       </h2>
       <p>
-        Document: <span className={classes.document}>{props.state.text.replace(/\n/g, "↲")}</span>
+        Document:{" "}
+        <span className={classes.document}>{replaceInvisibleCharacters(props.state.text)}</span>
       </p>
     </div>
   );

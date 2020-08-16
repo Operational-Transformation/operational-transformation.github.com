@@ -4,13 +4,13 @@ import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import Tooltip from "@material-ui/core/Tooltip";
 import { TextOperation } from "ot";
-import { getClientColor } from "./sharedStyles";
+import { getClientColor, replaceInvisibleCharacters } from "./sharedStyles";
 
 const renderOp = (op: string | number) => {
   if (typeof op === "string") {
     return (
       <span style={{ color: "#01FF70" }}>
-        insert("{op.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}")
+        insert("{replaceInvisibleCharacters(op).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}")
       </span>
     );
   } else if (op < 0) {

@@ -24,3 +24,6 @@ export const getClientColor = (clientName: ClientName): string => {
       return "#e2451e";
   }
 };
+
+export const replaceInvisibleCharacters = (str: string): string =>
+  str.replace(/\n/g, "¬").replace(/ /g, "·");
