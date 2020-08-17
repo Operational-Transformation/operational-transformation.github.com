@@ -208,10 +208,6 @@ const useClientStyles = createUseStyles({
     "& .CodeMirror": {
       height: "150px",
     },
-    // workaround for https://github.com/coderaiser/cm-show-invisibles/issues/12
-    "& .CodeMirror-code > div:last-child > pre > span::after": {
-      display: "none",
-    },
   },
 });
 
