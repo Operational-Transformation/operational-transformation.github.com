@@ -3,21 +3,23 @@ import { createUseStyles } from "react-jss";
 import {
   aliceLens,
   bobLens,
-  ClientAndSocketsVisualizationState,
-  ClientName,
   Lens,
   onClientOperation,
   onClientReceive,
   onServerReceive,
-  SynchronizationStateStatus,
-  VisualizationState,
-} from "./visualizationState";
+} from "./visualizationStateReducer";
 import {
   ClientAndSocketsVisualization,
   ClientAndSocketsVisualizationProps,
 } from "./ClientAndSocketsVisualization";
 import { ServerVisualization } from "./ServerVisualization";
 import { TextOperation } from "ot";
+import {
+  ClientAndSocketsVisualizationState,
+  ClientName,
+  SynchronizationStateStatus,
+  VisualizationState,
+} from "./types/visualizationState";
 
 const useStyles = createUseStyles({
   container: {
@@ -41,6 +43,7 @@ const initialClientAndSocketsVisualizationState: ClientAndSocketsVisualizationSt
     status: SynchronizationStateStatus.SYNCHRONIZED,
     serverRevision: initialRevision,
   },
+  clientLog: [],
   text: initialText,
 };
 

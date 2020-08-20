@@ -1,70 +1,14 @@
 import { TextOperation } from "ot";
-
-export type Queue<A> = A[];
-
-export enum ClientName {
-  Alice = "Alice",
-  Bob = "Bob",
-}
-
-interface OperationMeta {
-  author: ClientName;
-  key: string;
-}
-
-export interface Operation {
-  meta: OperationMeta;
-  textOperation: TextOperation;
-}
-
-export interface OperationAndRevision extends Operation {
-  revision: number; // non-negative integer
-}
-
-export interface ServerVisualizationState {
-  operations: Operation[];
-  text: string;
-}
-
-export enum SynchronizationStateStatus {
-  SYNCHRONIZED = "SYNCHRONIZED",
-  AWAITING_ACK = "AWAITING_ACK",
-  AWAITING_ACK_WITH_OPERATION = "AWAITING_ACK_WITH_OPERATION",
-}
-
-interface SynchronizationStateSynchronized {
-  status: SynchronizationStateStatus.SYNCHRONIZED;
-  serverRevision: number; // non-negative integer
-}
-
-interface SynchronizationStateAwaitingAck {
-  status: SynchronizationStateStatus.AWAITING_ACK;
-  expectedOperation: OperationAndRevision;
-}
-
-interface SynchronizationStateAwaitingAckWithOperation {
-  status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION;
-  expectedOperation: OperationAndRevision;
-  buffer: OperationAndRevision;
-}
-
-export type SynchronizationState =
-  | SynchronizationStateSynchronized
-  | SynchronizationStateAwaitingAck
-  | SynchronizationStateAwaitingAckWithOperation;
-
-export interface ClientAndSocketsVisualizationState {
-  toServer: Queue<OperationAndRevision>;
-  fromServer: Queue<OperationAndRevision>;
-  synchronizationState: SynchronizationState;
-  text: string;
-}
-
-export interface VisualizationState {
-  server: ServerVisualizationState;
-  alice: ClientAndSocketsVisualizationState;
-  bob: ClientAndSocketsVisualizationState;
-}
+import { Operation, OperationAndRevision } from "./types/operation";
+import {
+  ClientAndSocketsVisualizationState,
+  ClientName,
+  ServerVisualizationState,
+  SynchronizationState,
+  SynchronizationStateStatus,
+  VisualizationState,
+} from "./types/visualizationState";
+import { ClientEntryType, ClientLogEntry } from "./types/clientLog";
 
 const transformTextOperation = (
   a: TextOperation,
@@ -123,6 +67,7 @@ function processClientUserOperation(
 ): {
   newSynchronizationState: SynchronizationState;
   operationsToSendToServer: OperationAndRevision[];
+  newClientLogEntry: ClientLogEntry;
 } {
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED: {
@@ -135,22 +80,27 @@ function processClientUserOperation(
           expectedOperation: operationToSendToServer,
         },
         operationsToSendToServer: [operationToSendToServer],
+        newClientLogEntry: {
+          type: ClientEntryType.UserEditImmediatelySentToServer,
+          operation: operationToSendToServer,
+        },
       };
     }
     case SynchronizationStateStatus.AWAITING_ACK: {
       const revision = synchronizationState.expectedOperation.revision + 1;
       const meta = { key: `${clientName}-${revision}`, author: clientName };
+      let buffer: OperationAndRevision = { textOperation, meta, revision };
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
           expectedOperation: synchronizationState.expectedOperation,
-          buffer: {
-            textOperation,
-            meta,
-            revision,
-          },
+          buffer,
         },
         operationsToSendToServer: [],
+        newClientLogEntry: {
+          type: ClientEntryType.UserEditStoredAsBuffer,
+          operation: buffer,
+        },
       };
     }
     case SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION: {
@@ -165,6 +115,10 @@ function processClientUserOperation(
           },
         },
         operationsToSendToServer: [],
+        newClientLogEntry: {
+          type: ClientEntryType.UserEditAddedToBuffer,
+          textOperation,
+        },
       };
     }
   }
@@ -175,14 +129,15 @@ function clientUserOperation(
   operation: TextOperation,
   clientName: ClientName,
 ): ClientAndSocketsVisualizationState {
-  const { newSynchronizationState, operationsToSendToServer } = processClientUserOperation(
-    client.synchronizationState,
-    operation,
-    clientName,
-  );
+  const {
+    newSynchronizationState,
+    operationsToSendToServer,
+    newClientLogEntry,
+  } = processClientUserOperation(client.synchronizationState, operation, clientName);
 
   return {
     synchronizationState: newSynchronizationState,
+    clientLog: [newClientLogEntry, ...client.clientLog],
     toServer: [...client.toServer, ...operationsToSendToServer],
     fromServer: client.fromServer,
     text: operation.apply(client.text),
@@ -318,6 +273,7 @@ function processOperationFromServer(
 
 function clientReceiveOperation({
   synchronizationState,
+  clientLog,
   fromServer,
   toServer,
   text,
@@ -331,7 +287,7 @@ function clientReceiveOperation({
     operationToSendToServer,
     transformedReceivedOperationToApply,
   } = processOperationFromServer(synchronizationState, operation);
-  const newClientState = {
+  const newClientState: ClientAndSocketsVisualizationState = {
     synchronizationState: newSynchronizationState,
     text:
       transformedReceivedOperationToApply === undefined
@@ -340,6 +296,7 @@ function clientReceiveOperation({
     toServer:
       operationToSendToServer === undefined ? toServer : [...toServer, operationToSendToServer],
     fromServer: remainingOperations,
+    clientLog, // TODO
   };
   return { newClientState, transformedReceivedOperationToApply };
 }

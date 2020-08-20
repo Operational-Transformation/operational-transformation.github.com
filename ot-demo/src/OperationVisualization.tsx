@@ -1,10 +1,10 @@
-import { Operation } from "./visualizationState";
 import React, { FunctionComponent } from "react";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import Tooltip from "@material-ui/core/Tooltip";
 import { TextOperation } from "ot";
 import { getClientColor, replaceInvisibleCharacters } from "./sharedStyles";
+import { Operation } from "./types/operation";
 
 const renderOp = (op: string | number) => {
   if (typeof op === "string") {
@@ -53,8 +53,6 @@ export const OperationVisualization: FunctionComponent<OperationProps> = (props)
   const classes = useOperationStyles();
   const { className, style, ...otherProps } = props;
   const operation = props.operation;
-  console.log(operation.meta.key);
-  console.log(getClientColor(operation.meta.author));
 
   return (
     <Tooltip

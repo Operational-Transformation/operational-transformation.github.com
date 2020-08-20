@@ -1,11 +1,10 @@
 import {
   ClientAndSocketsVisualizationState,
   ClientName,
-  OperationAndRevision,
   Queue,
   SynchronizationState,
   SynchronizationStateStatus,
-} from "./visualizationState";
+} from "./types/visualizationState";
 import { TextOperation } from "ot";
 import { createUseStyles } from "react-jss";
 import React, { FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
@@ -22,6 +21,9 @@ import ArrowDownward from "@material-ui/icons/ArrowDownward";
 import Computer from "@material-ui/icons/Computer";
 import Tablet from "@material-ui/icons/Tablet";
 import { OperationVisualization } from "./OperationVisualization";
+import { OperationAndRevision } from "./types/operation";
+import { ClientLogVisualization } from "./ClientLogVisualization";
+import { useIsInitialRender } from "./hooks/useIsInitialRender";
 
 const useSocketOperationStyles = createUseStyles({
   operationInSocket: {
@@ -42,23 +44,14 @@ interface OperationInSocketProps {
 const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => {
   const classes = useSocketOperationStyles();
 
-  const [initialRender, setInitialRender] = useState<boolean>(true);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setInitialRender(false);
-    }, 10);
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, []);
+  const isInitialRender = useIsInitialRender();
 
   return (
     <OperationVisualization
       operation={props.operation}
       className={classes.operationInSocket}
       style={
-        initialRender && props.initialPositionTop !== undefined
+        isInitialRender && props.initialPositionTop !== undefined
           ? { top: props.initialPositionTop }
           : props.positionTop !== undefined
           ? { top: props.positionTop }
@@ -98,7 +91,7 @@ const useSocketStyles = createUseStyles({
       position: "absolute",
       padding: "2px",
       transform: "translate(-50%, -50%)",
-      zIndex: "1",
+      zIndex: "20",
       "&:hover": {
         backgroundColor: "#444",
       },
@@ -186,6 +179,8 @@ const useClientStyles = createUseStyles({
     width: "460px",
     display: "flex",
     flexDirection: "column",
+    position: "relative",
+    zIndex: "10",
   },
   sockets: {
     display: "flex",
@@ -200,7 +195,7 @@ const useClientStyles = createUseStyles({
   },
   synchronizationStateOperation: {
     margin: "0 2px",
-    verticalAlign: "middle",
+    verticalAlign: "-4px",
   },
   codeMirrorContainer: {
     border: "1px solid #ccc",
@@ -347,6 +342,7 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
           editorDidMount={setEditor}
         />
       </div>
+      <ClientLogVisualization clientLog={props.state.clientLog} />
     </div>
   );
 };

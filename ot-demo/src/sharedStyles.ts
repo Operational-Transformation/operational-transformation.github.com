@@ -1,11 +1,11 @@
 import { createUseStyles } from "react-jss";
-import { ClientName } from "./visualizationState";
+import { ClientName } from "./types/visualizationState";
 
 export const useSharedStyles = createUseStyles({
   site: {
     background: "#eee",
     padding: "20px",
-    margin: "0 10px",
+    margin: "0 15px",
     "& h2": {
       margin: "0 0 16px",
       "& svg": {

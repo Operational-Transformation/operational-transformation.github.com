@@ -2,8 +2,8 @@ import React, { FunctionComponent } from "react";
 import { replaceInvisibleCharacters, useSharedStyles } from "./sharedStyles";
 import clsx from "clsx";
 import StorageIcon from "@material-ui/icons/Storage";
-import { ServerVisualizationState } from "./visualizationState";
 import { createUseStyles } from "react-jss";
+import { ServerVisualizationState } from "./types/visualizationState";
 
 export const useServerStyles = createUseStyles({
   server: {
