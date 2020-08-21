@@ -21,7 +21,7 @@ import ArrowDownward from "@material-ui/icons/ArrowDownward";
 import Computer from "@material-ui/icons/Computer";
 import Tablet from "@material-ui/icons/Tablet";
 import { OperationVisualization } from "./OperationVisualization";
-import { OperationAndRevision } from "./types/operation";
+import { Operation, OperationAndRevision } from "./types/operation";
 import { ClientLogVisualization } from "./ClientLogVisualization";
 import { useIsInitialRender } from "./hooks/useIsInitialRender";
 
@@ -204,6 +204,9 @@ const useClientStyles = createUseStyles({
       height: "150px",
     },
   },
+  stateLabel: {
+    color: "#666",
+  },
 });
 
 const SynchronizationStateVisualization: FunctionComponent<{
@@ -211,23 +214,25 @@ const SynchronizationStateVisualization: FunctionComponent<{
 }> = ({ synchronizationState }) => {
   const clientClasses = useClientStyles();
 
+  const stateLabel = <span className={clientClasses.stateLabel}>State:</span>;
+
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED:
-      return <p className={clientClasses.synchronizationState}>State: Synchronized</p>;
-    case SynchronizationStateStatus.AWAITING_ACK:
+      return <p className={clientClasses.synchronizationState}>{stateLabel} Synchronized</p>;
+    case SynchronizationStateStatus.AWAITING_OPERATION:
       return (
         <p className={clientClasses.synchronizationState}>
-          State: Awaiting operation{" "}
+          {stateLabel} Awaiting operation{" "}
           <OperationVisualization
             operation={synchronizationState.expectedOperation}
             className={clientClasses.synchronizationStateOperation}
           />
         </p>
       );
-    case SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION:
+    case SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER:
       return (
         <p className={clientClasses.synchronizationState}>
-          State: Awaiting operation{" "}
+          {stateLabel} Awaiting operation{" "}
           <OperationVisualization
             operation={synchronizationState.expectedOperation}
             className={clientClasses.synchronizationStateOperation}
@@ -248,7 +253,7 @@ export interface ClientAndSocketsVisualizationProps {
   state: ClientAndSocketsVisualizationState;
   onClientOperation: (operation: TextOperation) => void;
   onServerReceiveClick: () => void;
-  onClientReceiveClick: () => TextOperation | undefined;
+  onClientReceiveClick: () => Operation | undefined;
 }
 
 declare module "codemirror" {
@@ -303,10 +308,10 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
   }, [editor, onChanges]);
 
   const onClientReceive = useCallback(() => {
-    const textOperationToApply = onClientReceiveClick();
-    if (textOperationToApply !== undefined && editor !== undefined) {
+    const operationToApply = onClientReceiveClick();
+    if (operationToApply !== undefined && editor !== undefined) {
       applyingOperationFromServerRef.current = true;
-      CodeMirrorAdapter.applyOperationToCodeMirror(textOperationToApply, editor);
+      CodeMirrorAdapter.applyOperationToCodeMirror(operationToApply.textOperation, editor);
       applyingOperationFromServerRef.current = false;
     }
   }, [editor, onClientReceiveClick]);

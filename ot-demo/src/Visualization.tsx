@@ -20,6 +20,7 @@ import {
   SynchronizationStateStatus,
   VisualizationState,
 } from "./types/visualizationState";
+import { Operation } from "./types/operation";
 
 const useStyles = createUseStyles({
   container: {
@@ -82,7 +83,7 @@ export const Visualization = () => {
       );
     },
     onClientReceiveClick: () => {
-      let transformedReceivedOperation: TextOperation | undefined = undefined;
+      let transformedReceivedOperation: Operation | undefined = undefined;
       setVisualizationState((visualizationState) => {
         const { newState, transformedReceivedOperationToApply } = onClientReceive(
           visualizationState,

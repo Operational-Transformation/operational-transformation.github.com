@@ -17,11 +17,17 @@ const transformTextOperation = (
   (TextOperation.transform(a, b) as unknown) as [TextOperation, TextOperation]; // because type definition is wrong
 
 const transformOperation = (
-  a: TextOperation, // server operation
+  a: Operation, // server operation
   b: OperationAndRevision, // client operation
-): [TextOperation, OperationAndRevision] => {
-  const [aPrime, bTextPrime] = transformTextOperation(a, b.textOperation);
-  return [aPrime, { textOperation: bTextPrime, meta: b.meta, revision: b.revision + 1 }];
+): [Operation, OperationAndRevision] => {
+  const [aTextPrime, bTextPrime] = transformTextOperation(a.textOperation, b.textOperation);
+  const aPrime: Operation = { textOperation: aTextPrime, meta: a.meta };
+  const bPrime: OperationAndRevision = {
+    textOperation: bTextPrime,
+    meta: b.meta,
+    revision: b.revision + 1,
+  };
+  return [aPrime, bPrime];
 };
 
 function receiveOperationFromClient(
@@ -34,7 +40,7 @@ function receiveOperationFromClient(
   const concurrentOperations = server.operations.slice(operation.revision);
 
   const transformedOperation = concurrentOperations.reduce<OperationAndRevision>(
-    (op, concurrentOp) => transformOperation(concurrentOp.textOperation, op)[1],
+    (op, concurrentOp) => transformOperation(concurrentOp, op)[1],
     operation,
   );
 
@@ -76,37 +82,37 @@ function processClientUserOperation(
       const operationToSendToServer = { meta, textOperation, revision };
       return {
         newSynchronizationState: {
-          status: SynchronizationStateStatus.AWAITING_ACK,
+          status: SynchronizationStateStatus.AWAITING_OPERATION,
           expectedOperation: operationToSendToServer,
         },
         operationsToSendToServer: [operationToSendToServer],
         newClientLogEntry: {
-          type: ClientEntryType.UserEditImmediatelySentToServer,
+          type: ClientEntryType.USER_EDIT_IMMEDIATELY_SENT_TO_SERVER,
           operation: operationToSendToServer,
         },
       };
     }
-    case SynchronizationStateStatus.AWAITING_ACK: {
+    case SynchronizationStateStatus.AWAITING_OPERATION: {
       const revision = synchronizationState.expectedOperation.revision + 1;
       const meta = { key: `${clientName}-${revision}`, author: clientName };
       let buffer: OperationAndRevision = { textOperation, meta, revision };
       return {
         newSynchronizationState: {
-          status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
+          status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
           expectedOperation: synchronizationState.expectedOperation,
           buffer,
         },
         operationsToSendToServer: [],
         newClientLogEntry: {
-          type: ClientEntryType.UserEditStoredAsBuffer,
+          type: ClientEntryType.USER_EDIT_STORED_AS_BUFFER,
           operation: buffer,
         },
       };
     }
-    case SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION: {
+    case SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER: {
       return {
         newSynchronizationState: {
-          status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
+          status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
           expectedOperation: synchronizationState.expectedOperation,
           buffer: {
             meta: synchronizationState.buffer.meta,
@@ -116,7 +122,7 @@ function processClientUserOperation(
         },
         operationsToSendToServer: [],
         newClientLogEntry: {
-          type: ClientEntryType.UserEditAddedToBuffer,
+          type: ClientEntryType.USER_EDIT_ADDED_TO_BUFFER,
           textOperation,
         },
       };
@@ -189,11 +195,12 @@ export function onServerReceive(
 
 function processOperationFromServer(
   synchronizationState: SynchronizationState,
-  receivedOperation: Operation,
+  receivedOperation: OperationAndRevision,
 ): {
   newSynchronizationState: SynchronizationState;
   operationToSendToServer: OperationAndRevision | undefined;
-  transformedReceivedOperationToApply: TextOperation | undefined;
+  transformedReceivedOperationToApply: Operation | undefined;
+  newClientLogEntry: ClientLogEntry;
 } {
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED: {
@@ -204,10 +211,14 @@ function processOperationFromServer(
       return {
         newSynchronizationState,
         operationToSendToServer: undefined,
-        transformedReceivedOperationToApply: receivedOperation.textOperation,
+        transformedReceivedOperationToApply: receivedOperation,
+        newClientLogEntry: {
+          type: ClientEntryType.RECEIVED_SERVER_OPERATION_WHILE_SYNCHRONIZED,
+          receivedOperation,
+        },
       };
     }
-    case SynchronizationStateStatus.AWAITING_ACK: {
+    case SynchronizationStateStatus.AWAITING_OPERATION: {
       const { expectedOperation } = synchronizationState;
       if (receivedOperation.meta.key === expectedOperation.meta.key) {
         const newSynchronizationState: SynchronizationState = {
@@ -218,46 +229,62 @@ function processOperationFromServer(
           newSynchronizationState,
           operationToSendToServer: undefined,
           transformedReceivedOperationToApply: undefined,
+          newClientLogEntry: {
+            type: ClientEntryType.RECEIVED_OWN_OPERATION,
+            acknowledgedOperation: receivedOperation,
+          },
         };
       } else {
         const [transformedReceivedOperation, transformedExpectedOperation] = transformOperation(
-          receivedOperation.textOperation,
+          receivedOperation,
           expectedOperation,
         );
         const newSynchronizationState: SynchronizationState = {
-          status: SynchronizationStateStatus.AWAITING_ACK,
+          status: SynchronizationStateStatus.AWAITING_OPERATION,
           expectedOperation: transformedExpectedOperation,
         };
         return {
           newSynchronizationState,
           operationToSendToServer: undefined,
           transformedReceivedOperationToApply: transformedReceivedOperation,
+          newClientLogEntry: {
+            type: ClientEntryType.RECEIVED_SERVER_OPERATION_WHILE_AWAITING_OPERATION,
+            receivedOperation,
+            transformedReceivedOperation: transformedReceivedOperation,
+            awaitedOperation: expectedOperation,
+            transformedAwaitedOperation: transformedExpectedOperation,
+          },
         };
       }
     }
-    case SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION: {
+    case SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER: {
       const { expectedOperation, buffer } = synchronizationState;
       if (receivedOperation.meta.key === expectedOperation.meta.key) {
         const newSynchronizationState: SynchronizationState = {
-          status: SynchronizationStateStatus.AWAITING_ACK,
+          status: SynchronizationStateStatus.AWAITING_OPERATION,
           expectedOperation: synchronizationState.buffer,
         };
         return {
           newSynchronizationState,
           operationToSendToServer: synchronizationState.buffer,
           transformedReceivedOperationToApply: undefined,
+          newClientLogEntry: {
+            type: ClientEntryType.RECEIVED_OWN_OPERATION_AND_SENT_BUFFER,
+            acknowledgedOperation: receivedOperation,
+            sentBuffer: synchronizationState.buffer,
+          },
         };
       } else {
         const [
           onceTransformedReceivedTextOperation,
           transformedExpectedOperation,
-        ] = transformOperation(receivedOperation.textOperation, expectedOperation);
+        ] = transformOperation(receivedOperation, expectedOperation);
         const [transformedReceivedOperation, transformedBuffer] = transformOperation(
           onceTransformedReceivedTextOperation,
           buffer,
         );
         const newSynchronizationState: SynchronizationState = {
-          status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION,
+          status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
           expectedOperation: transformedExpectedOperation,
           buffer: transformedBuffer,
         };
@@ -265,6 +292,9 @@ function processOperationFromServer(
           newSynchronizationState,
           operationToSendToServer: undefined,
           transformedReceivedOperationToApply: transformedReceivedOperation,
+          newClientLogEntry: {
+            type: ClientEntryType.RECEIVED_SERVER_OPERATION_WHILE_AWAITING_OPERATION_WITH_BUFFER,
+          },
         };
       }
     }
@@ -279,24 +309,25 @@ function clientReceiveOperation({
   text,
 }: ClientAndSocketsVisualizationState): {
   newClientState: ClientAndSocketsVisualizationState;
-  transformedReceivedOperationToApply: TextOperation | undefined;
+  transformedReceivedOperationToApply: Operation | undefined;
 } {
   const [operation, ...remainingOperations] = fromServer;
   const {
     newSynchronizationState,
     operationToSendToServer,
     transformedReceivedOperationToApply,
+    newClientLogEntry,
   } = processOperationFromServer(synchronizationState, operation);
   const newClientState: ClientAndSocketsVisualizationState = {
     synchronizationState: newSynchronizationState,
     text:
       transformedReceivedOperationToApply === undefined
         ? text
-        : transformedReceivedOperationToApply.apply(text),
+        : transformedReceivedOperationToApply.textOperation.apply(text),
     toServer:
       operationToSendToServer === undefined ? toServer : [...toServer, operationToSendToServer],
     fromServer: remainingOperations,
-    clientLog, // TODO
+    clientLog: [newClientLogEntry, ...clientLog],
   };
   return { newClientState, transformedReceivedOperationToApply };
 }
@@ -306,7 +337,7 @@ export function onClientReceive(
   clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
 ): {
   newState: VisualizationState;
-  transformedReceivedOperationToApply: TextOperation | undefined;
+  transformedReceivedOperationToApply: Operation | undefined;
 } {
   const { newClientState, transformedReceivedOperationToApply } = clientReceiveOperation(
     clientLens.get(visualizationState),

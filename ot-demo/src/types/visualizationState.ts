@@ -15,8 +15,8 @@ export interface ServerVisualizationState {
 
 export enum SynchronizationStateStatus {
   SYNCHRONIZED = "SYNCHRONIZED",
-  AWAITING_ACK = "AWAITING_ACK",
-  AWAITING_ACK_WITH_OPERATION = "AWAITING_ACK_WITH_OPERATION",
+  AWAITING_OPERATION = "AWAITING_OPERATION",
+  AWAITING_OPERATION_WITH_BUFFER = "AWAITING_OPERATION_WITH_BUFFER",
 }
 
 interface SynchronizationStateSynchronized {
@@ -25,12 +25,12 @@ interface SynchronizationStateSynchronized {
 }
 
 interface SynchronizationStateAwaitingAck {
-  status: SynchronizationStateStatus.AWAITING_ACK;
+  status: SynchronizationStateStatus.AWAITING_OPERATION;
   expectedOperation: OperationAndRevision;
 }
 
 interface SynchronizationStateAwaitingAckWithOperation {
-  status: SynchronizationStateStatus.AWAITING_ACK_WITH_OPERATION;
+  status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER;
   expectedOperation: OperationAndRevision;
   buffer: OperationAndRevision;
 }
