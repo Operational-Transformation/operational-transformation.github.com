@@ -65,4 +65,11 @@ export interface ReceivedServerOperationWhileAwaitingOperation {
 
 export interface ReceivedServerOperationWhileAwaitingOperationWithBuffer {
   type: ClientEntryType.RECEIVED_SERVER_OPERATION_WHILE_AWAITING_OPERATION_WITH_BUFFER;
+  receivedOperation: OperationAndRevision;
+  onceTransformedReceivedOperation: Operation;
+  twiceTransformedReceivedOperation: Operation;
+  awaitedOperation: OperationAndRevision;
+  transformedAwaitedOperation: OperationAndRevision;
+  bufferOperation: Operation;
+  transformedBufferOperation: Operation;
 }

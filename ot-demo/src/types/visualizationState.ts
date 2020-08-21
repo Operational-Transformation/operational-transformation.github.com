@@ -26,12 +26,12 @@ interface SynchronizationStateSynchronized {
 
 interface SynchronizationStateAwaitingAck {
   status: SynchronizationStateStatus.AWAITING_OPERATION;
-  expectedOperation: OperationAndRevision;
+  awaitedOperation: OperationAndRevision;
 }
 
 interface SynchronizationStateAwaitingAckWithOperation {
   status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER;
-  expectedOperation: OperationAndRevision;
+  awaitedOperation: OperationAndRevision;
   buffer: OperationAndRevision;
 }
 

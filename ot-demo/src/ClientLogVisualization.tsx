@@ -14,8 +14,7 @@ import {
 } from "./types/clientLog";
 import { OperationVisualization } from "./OperationVisualization";
 import { createUseStyles } from "react-jss";
-import { start } from "repl";
-import { getClientColor } from "./sharedStyles";
+import { ArrowDiagram } from "./ArrowDiagram";
 
 const useStyles = createUseStyles({
   clientLog: {
@@ -115,33 +114,6 @@ const ReceivedServerOperationWhileSynchronizedVisualization: FunctionComponent<R
   );
 };
 
-const SvgArrow: FunctionComponent<{
-  start: { x: number; y: number };
-  end: { x: number; y: number };
-  shaftWidth: number;
-  tipLength: number;
-  tipWidth: number;
-  color: string;
-}> = ({ start, end, shaftWidth, tipLength, tipWidth, color }) => {
-  const diffX = end.x - start.x;
-  const diffY = end.y - start.y;
-  const length = Math.sqrt(diffX * diffX + diffY * diffY);
-  const tipToShaftLength = (tipWidth - shaftWidth) / 2;
-  const shaftLength = length - tipLength;
-
-  return (
-    <path
-      fill={color}
-      transform={`matrix(${diffX / length}, ${diffY / length}, ${-diffY / length}, ${
-        diffX / length
-      }, ${start.x}, ${start.y})`}
-      d={`m ${length},0 -${tipLength},-${
-        tipWidth / 2
-      } 0,${tipToShaftLength} -${shaftLength},0 0,${shaftWidth} ${shaftLength},0 0,${tipToShaftLength} z`}
-    />
-  );
-};
-
 const ReceivedServerOperationWhileAwaitingOperationVisualization: FunctionComponent<ReceivedServerOperationWhileAwaitingOperation> = (
   logEntry,
 ) => {
@@ -152,62 +124,23 @@ const ReceivedServerOperationWhileAwaitingOperationVisualization: FunctionCompon
     transformedAwaitedOperation,
   } = logEntry;
   const classes = useStyles();
-  const arrowStyle = {
-    shaftWidth: 10,
-    tipLength: 24,
-    tipWidth: 20,
-    // color: "#ddd",
-  };
 
-  const opStyle = (x: number, y: number): CSSProperties => ({
-    position: "absolute",
-    left: `${x - 10}px`,
-    top: `${y - 10}px`,
-  });
+  const topLeft = { x: 20, y: 15 };
+  const topRight = { x: 125, y: 20 };
+  const bottomLeft = { x: 15, y: 120 };
+  const bottomRight = { x: 120, y: 125 };
 
-  const receivedOperationColor = getClientColor(receivedOperation.meta.author);
-  const awaitedOperationColor = getClientColor(awaitedOperation.meta.author);
+  const arrows = [
+    { operation: awaitedOperation, start: topLeft, end: topRight },
+    { operation: transformedAwaitedOperation, start: bottomLeft, end: bottomRight },
+    { operation: receivedOperation, start: topLeft, end: bottomLeft },
+    { operation: transformedReceivedOperation, start: topRight, end: bottomRight },
+  ];
 
   return (
     <>
-      <div style={{ position: "relative", width: "140px", height: "140px", margin: "0 auto 4px" }}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width={140}
-          height={140}
-          style={{ position: "absolute", opacity: "0.2" }}
-        >
-          <SvgArrow
-            start={{ x: 30, y: 20 }}
-            end={{ x: 115, y: 20 }}
-            {...arrowStyle}
-            color={receivedOperationColor}
-          />
-          <SvgArrow
-            start={{ x: 20, y: 30 }}
-            end={{ x: 20, y: 115 }}
-            {...arrowStyle}
-            color={awaitedOperationColor}
-          />
-          <SvgArrow
-            start={{ x: 30, y: 120 }}
-            end={{ x: 115, y: 120 }}
-            {...arrowStyle}
-            color={receivedOperationColor}
-          />
-          <SvgArrow
-            start={{ x: 120, y: 30 }}
-            end={{ x: 120, y: 115 }}
-            {...arrowStyle}
-            color={awaitedOperationColor}
-          />
-        </svg>
-        <OperationVisualization operation={receivedOperation} style={opStyle(68, 20)} />
-        <OperationVisualization operation={transformedReceivedOperation} style={opStyle(68, 120)} />
-        <OperationVisualization operation={awaitedOperation} style={opStyle(20, 68)} />
-        <OperationVisualization operation={transformedAwaitedOperation} style={opStyle(120, 68)} />
-      </div>
-      <p>
+      <ArrowDiagram width={140} height={140} arrows={arrows} />
+      <p style={{ marginTop: "4px" }}>
         Transformed received operation{" "}
         <OperationVisualization className={classes.inlineOperation} operation={receivedOperation} />{" "}
         against the awaited transformation{" "}
@@ -231,9 +164,63 @@ const ReceivedServerOperationWhileAwaitingOperationVisualization: FunctionCompon
 const ReceivedServerOperationWhileAwaitingOperationWithBufferVisualization: FunctionComponent<ReceivedServerOperationWhileAwaitingOperationWithBuffer> = (
   logEntry,
 ) => {
+  const {
+    receivedOperation,
+    onceTransformedReceivedOperation,
+    twiceTransformedReceivedOperation,
+    awaitedOperation,
+    transformedAwaitedOperation,
+    bufferOperation,
+    transformedBufferOperation,
+  } = logEntry;
   const classes = useStyles();
 
-  return <p>TODO: ReceivedServerOperationWhileAwaitingOperationWithBufferVisualization</p>;
+  const topLeft = { x: 20, y: 15 };
+  const topCenter = { x: 125, y: 20 };
+  const topRight = { x: 230, y: 25 };
+  const bottomLeft = { x: 15, y: 120 };
+  const bottomCenter = { x: 120, y: 125 };
+  const bottomRight = { x: 225, y: 130 };
+
+  const arrows = [
+    { operation: awaitedOperation, start: topLeft, end: topCenter },
+    { operation: transformedAwaitedOperation, start: bottomLeft, end: bottomCenter },
+    { operation: bufferOperation, start: topCenter, end: topRight },
+    { operation: transformedBufferOperation, start: bottomCenter, end: bottomRight },
+    { operation: receivedOperation, start: topLeft, end: bottomLeft },
+    { operation: onceTransformedReceivedOperation, start: topCenter, end: bottomCenter },
+    { operation: twiceTransformedReceivedOperation, start: topRight, end: bottomRight },
+  ];
+
+  return (
+    <>
+      <ArrowDiagram width={245} height={145} arrows={arrows} />
+      <p style={{ marginTop: "4px" }}>
+        Transformed received operation{" "}
+        <OperationVisualization className={classes.inlineOperation} operation={receivedOperation} />{" "}
+        first against the awaited transformation{" "}
+        <OperationVisualization className={classes.inlineOperation} operation={awaitedOperation} />{" "}
+        and then against the buffer{" "}
+        <OperationVisualization className={classes.inlineOperation} operation={bufferOperation} />{" "}
+        resulting in{" "}
+        <OperationVisualization
+          className={classes.inlineOperation}
+          operation={twiceTransformedReceivedOperation}
+        />{" "}
+        (applied to the editor), a new awaited operation{" "}
+        <OperationVisualization
+          className={classes.inlineOperation}
+          operation={transformedAwaitedOperation}
+        />{" "}
+        and a new buffer{" "}
+        <OperationVisualization
+          className={classes.inlineOperation}
+          operation={transformedBufferOperation}
+        />
+        .
+      </p>
+    </>
+  );
 };
 
 const renderClientLogEntry = (clientLogEntry: ClientLogEntry): NonNullable<React.ReactNode> => {
@@ -299,7 +286,6 @@ export const ClientLogVisualization: FunctionComponent<ClientLogVisualizationPro
   clientLog,
 }) => {
   const classes = useStyles();
-  console.log(clientLog.length);
 
   return (
     <div className={classes.clientLog}>

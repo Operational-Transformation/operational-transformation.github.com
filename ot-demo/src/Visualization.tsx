@@ -13,7 +13,6 @@ import {
   ClientAndSocketsVisualizationProps,
 } from "./ClientAndSocketsVisualization";
 import { ServerVisualization } from "./ServerVisualization";
-import { TextOperation } from "ot";
 import {
   ClientAndSocketsVisualizationState,
   ClientName,

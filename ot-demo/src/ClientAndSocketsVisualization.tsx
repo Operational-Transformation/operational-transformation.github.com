@@ -224,7 +224,7 @@ const SynchronizationStateVisualization: FunctionComponent<{
         <p className={clientClasses.synchronizationState}>
           {stateLabel} Awaiting operation{" "}
           <OperationVisualization
-            operation={synchronizationState.expectedOperation}
+            operation={synchronizationState.awaitedOperation}
             className={clientClasses.synchronizationStateOperation}
           />
         </p>
@@ -234,7 +234,7 @@ const SynchronizationStateVisualization: FunctionComponent<{
         <p className={clientClasses.synchronizationState}>
           {stateLabel} Awaiting operation{" "}
           <OperationVisualization
-            operation={synchronizationState.expectedOperation}
+            operation={synchronizationState.awaitedOperation}
             className={clientClasses.synchronizationStateOperation}
           />{" "}
           with buffer{" "}

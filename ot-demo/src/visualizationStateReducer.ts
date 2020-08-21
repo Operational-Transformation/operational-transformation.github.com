@@ -83,7 +83,7 @@ function processClientUserOperation(
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_OPERATION,
-          expectedOperation: operationToSendToServer,
+          awaitedOperation: operationToSendToServer,
         },
         operationsToSendToServer: [operationToSendToServer],
         newClientLogEntry: {
@@ -93,13 +93,13 @@ function processClientUserOperation(
       };
     }
     case SynchronizationStateStatus.AWAITING_OPERATION: {
-      const revision = synchronizationState.expectedOperation.revision + 1;
+      const revision = synchronizationState.awaitedOperation.revision + 1;
       const meta = { key: `${clientName}-${revision}`, author: clientName };
       let buffer: OperationAndRevision = { textOperation, meta, revision };
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
-          expectedOperation: synchronizationState.expectedOperation,
+          awaitedOperation: synchronizationState.awaitedOperation,
           buffer,
         },
         operationsToSendToServer: [],
@@ -113,7 +113,7 @@ function processClientUserOperation(
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
-          expectedOperation: synchronizationState.expectedOperation,
+          awaitedOperation: synchronizationState.awaitedOperation,
           buffer: {
             meta: synchronizationState.buffer.meta,
             revision: synchronizationState.buffer.revision,
@@ -219,11 +219,11 @@ function processOperationFromServer(
       };
     }
     case SynchronizationStateStatus.AWAITING_OPERATION: {
-      const { expectedOperation } = synchronizationState;
-      if (receivedOperation.meta.key === expectedOperation.meta.key) {
+      const { awaitedOperation } = synchronizationState;
+      if (receivedOperation.meta.key === awaitedOperation.meta.key) {
         const newSynchronizationState: SynchronizationState = {
           status: SynchronizationStateStatus.SYNCHRONIZED,
-          serverRevision: expectedOperation.revision + 1,
+          serverRevision: awaitedOperation.revision + 1,
         };
         return {
           newSynchronizationState,
@@ -235,13 +235,13 @@ function processOperationFromServer(
           },
         };
       } else {
-        const [transformedReceivedOperation, transformedExpectedOperation] = transformOperation(
+        const [transformedReceivedOperation, transformedAwaitedOperation] = transformOperation(
           receivedOperation,
-          expectedOperation,
+          awaitedOperation,
         );
         const newSynchronizationState: SynchronizationState = {
           status: SynchronizationStateStatus.AWAITING_OPERATION,
-          expectedOperation: transformedExpectedOperation,
+          awaitedOperation: transformedAwaitedOperation,
         };
         return {
           newSynchronizationState,
@@ -251,18 +251,18 @@ function processOperationFromServer(
             type: ClientEntryType.RECEIVED_SERVER_OPERATION_WHILE_AWAITING_OPERATION,
             receivedOperation,
             transformedReceivedOperation: transformedReceivedOperation,
-            awaitedOperation: expectedOperation,
-            transformedAwaitedOperation: transformedExpectedOperation,
+            awaitedOperation: awaitedOperation,
+            transformedAwaitedOperation: transformedAwaitedOperation,
           },
         };
       }
     }
     case SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER: {
-      const { expectedOperation, buffer } = synchronizationState;
-      if (receivedOperation.meta.key === expectedOperation.meta.key) {
+      const { awaitedOperation, buffer } = synchronizationState;
+      if (receivedOperation.meta.key === awaitedOperation.meta.key) {
         const newSynchronizationState: SynchronizationState = {
           status: SynchronizationStateStatus.AWAITING_OPERATION,
-          expectedOperation: synchronizationState.buffer,
+          awaitedOperation: synchronizationState.buffer,
         };
         return {
           newSynchronizationState,
@@ -275,25 +275,32 @@ function processOperationFromServer(
           },
         };
       } else {
-        const [
-          onceTransformedReceivedTextOperation,
-          transformedExpectedOperation,
-        ] = transformOperation(receivedOperation, expectedOperation);
-        const [transformedReceivedOperation, transformedBuffer] = transformOperation(
-          onceTransformedReceivedTextOperation,
+        const [onceTransformedReceivedOperation, transformedAwaitedOperation] = transformOperation(
+          receivedOperation,
+          awaitedOperation,
+        );
+        const [twiceTransformedReceivedOperation, transformedBuffer] = transformOperation(
+          onceTransformedReceivedOperation,
           buffer,
         );
         const newSynchronizationState: SynchronizationState = {
           status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
-          expectedOperation: transformedExpectedOperation,
+          awaitedOperation: transformedAwaitedOperation,
           buffer: transformedBuffer,
         };
         return {
           newSynchronizationState,
           operationToSendToServer: undefined,
-          transformedReceivedOperationToApply: transformedReceivedOperation,
+          transformedReceivedOperationToApply: twiceTransformedReceivedOperation,
           newClientLogEntry: {
             type: ClientEntryType.RECEIVED_SERVER_OPERATION_WHILE_AWAITING_OPERATION_WITH_BUFFER,
+            receivedOperation,
+            onceTransformedReceivedOperation,
+            twiceTransformedReceivedOperation,
+            awaitedOperation,
+            transformedAwaitedOperation,
+            bufferOperation: buffer,
+            transformedBufferOperation: transformedBuffer,
           },
         };
       }
