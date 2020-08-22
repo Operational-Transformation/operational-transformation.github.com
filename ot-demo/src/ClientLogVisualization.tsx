@@ -74,6 +74,7 @@ const ReceivedOwnOperationVisualization: FunctionComponent<ReceivedOwnOperation>
         className={classes.inlineOperation}
         operation={logEntry.acknowledgedOperation}
       />
+      .
     </p>
   );
 };
