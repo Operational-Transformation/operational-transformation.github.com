@@ -7,7 +7,14 @@ import {
 } from "./types/visualizationState";
 import { TextOperation } from "ot";
 import { createUseStyles } from "react-jss";
-import React, { FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  CSSProperties,
+  FunctionComponent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
 import "cm-show-invisibles";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
@@ -38,6 +45,7 @@ interface OperationInSocketProps {
   operation: OperationAndRevision;
   initialPositionTop?: string;
   positionTop?: string;
+  disableHover?: boolean;
   onTransitionEnd?: () => void;
 }
 
@@ -46,17 +54,20 @@ const OperationInSocket: FunctionComponent<OperationInSocketProps> = (props) => 
 
   const isInitialRender = useIsInitialRender();
 
+  const positionStyle: CSSProperties =
+    isInitialRender && props.initialPositionTop !== undefined
+      ? { top: props.initialPositionTop }
+      : props.positionTop !== undefined
+      ? { top: props.positionTop }
+      : {};
+
+  const hoverStyle: CSSProperties = props.disableHover ? { pointerEvents: "none" } : {};
+
   return (
     <OperationVisualization
       operation={props.operation}
       className={classes.operationInSocket}
-      style={
-        isInitialRender && props.initialPositionTop !== undefined
-          ? { top: props.initialPositionTop }
-          : props.positionTop !== undefined
-          ? { top: props.positionTop }
-          : undefined
-      }
+      style={{ ...positionStyle, ...hoverStyle }}
       onTransitionEnd={props.onTransitionEnd}
     />
   );
@@ -152,9 +163,10 @@ const Socket: FunctionComponent<SocketProps> = ({ queue, onReceiveClick, directi
         {[
           ...leavingOps.map((operation) => (
             <OperationInSocket
-              key={operation.meta.key}
+              key={operation.meta.id}
               operation={operation}
               positionTop={`calc(${positionInverter} 0px)`}
+              disableHover={true /* prevent accidentally triggering tooltip when operation moves */}
               onTransitionEnd={() =>
                 setDelayedQueue((delayedQueue) => delayedQueue.filter((o) => o !== operation))
               }
@@ -162,7 +174,7 @@ const Socket: FunctionComponent<SocketProps> = ({ queue, onReceiveClick, directi
           )),
           ...queue.map((operation, i) => (
             <OperationInSocket
-              key={operation.meta.key}
+              key={operation.meta.id}
               operation={operation}
               positionTop={`calc(${positionInverter} 100% / ${queue.length + 1} * ${i + 1})`}
               initialPositionTop={`calc(${positionInverter} (100% + 20px))`}

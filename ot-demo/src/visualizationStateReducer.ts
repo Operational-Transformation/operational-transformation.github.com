@@ -1,5 +1,11 @@
 import { TextOperation } from "ot";
-import { Operation, OperationAndRevision } from "./types/operation";
+import {
+  composeOperation,
+  createNewOperation,
+  Operation,
+  OperationAndRevision,
+  transformOperation,
+} from "./types/operation";
 import {
   ClientAndSocketsVisualizationState,
   ClientName,
@@ -9,26 +15,6 @@ import {
   VisualizationState,
 } from "./types/visualizationState";
 import { ClientEntryType, ClientLogEntry } from "./types/clientLog";
-
-const transformTextOperation = (
-  a: TextOperation,
-  b: TextOperation,
-): [TextOperation, TextOperation] =>
-  (TextOperation.transform(a, b) as unknown) as [TextOperation, TextOperation]; // because type definition is wrong
-
-const transformOperation = (
-  a: Operation, // server operation
-  b: OperationAndRevision, // client operation
-): [Operation, OperationAndRevision] => {
-  const [aTextPrime, bTextPrime] = transformTextOperation(a.textOperation, b.textOperation);
-  const aPrime: Operation = { textOperation: aTextPrime, meta: a.meta };
-  const bPrime: OperationAndRevision = {
-    textOperation: bTextPrime,
-    meta: b.meta,
-    revision: b.revision + 1,
-  };
-  return [aPrime, bPrime];
-};
 
 function receiveOperationFromClient(
   server: ServerVisualizationState,
@@ -78,8 +64,10 @@ function processClientUserOperation(
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED: {
       const revision = synchronizationState.serverRevision;
-      const meta = { key: `${clientName}-${revision}`, author: clientName };
-      const operationToSendToServer = { meta, textOperation, revision };
+      const operationToSendToServer = {
+        ...createNewOperation(textOperation, clientName),
+        revision,
+      };
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_OPERATION,
@@ -94,8 +82,10 @@ function processClientUserOperation(
     }
     case SynchronizationStateStatus.AWAITING_OPERATION: {
       const revision = synchronizationState.awaitedOperation.revision + 1;
-      const meta = { key: `${clientName}-${revision}`, author: clientName };
-      let buffer: OperationAndRevision = { textOperation, meta, revision };
+      let buffer: OperationAndRevision = {
+        ...createNewOperation(textOperation, clientName),
+        revision,
+      };
       return {
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
@@ -114,11 +104,7 @@ function processClientUserOperation(
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
           awaitedOperation: synchronizationState.awaitedOperation,
-          buffer: {
-            meta: synchronizationState.buffer.meta,
-            revision: synchronizationState.buffer.revision,
-            textOperation: synchronizationState.buffer.textOperation.compose(textOperation),
-          },
+          buffer: composeOperation(synchronizationState.buffer, textOperation),
         },
         operationsToSendToServer: [],
         newClientLogEntry: {
@@ -220,7 +206,7 @@ function processOperationFromServer(
     }
     case SynchronizationStateStatus.AWAITING_OPERATION: {
       const { awaitedOperation } = synchronizationState;
-      if (receivedOperation.meta.key === awaitedOperation.meta.key) {
+      if (receivedOperation.meta.id === awaitedOperation.meta.id) {
         const newSynchronizationState: SynchronizationState = {
           status: SynchronizationStateStatus.SYNCHRONIZED,
           serverRevision: awaitedOperation.revision + 1,
@@ -259,7 +245,7 @@ function processOperationFromServer(
     }
     case SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER: {
       const { awaitedOperation, buffer } = synchronizationState;
-      if (receivedOperation.meta.key === awaitedOperation.meta.key) {
+      if (receivedOperation.meta.id === awaitedOperation.meta.id) {
         const newSynchronizationState: SynchronizationState = {
           status: SynchronizationStateStatus.AWAITING_OPERATION,
           awaitedOperation: synchronizationState.buffer,

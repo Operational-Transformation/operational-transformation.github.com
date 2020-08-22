@@ -1,7 +1,7 @@
 import React, { CSSProperties, FunctionComponent } from "react";
 import { Operation } from "./types/operation";
 import { getClientColor } from "./sharedStyles";
-import { OperationVisualization } from "./OperationVisualization";
+import { OperationTooltipPlacement, OperationVisualization } from "./OperationVisualization";
 
 interface Point {
   x: number;
@@ -46,10 +46,17 @@ const interpolate = (lambda: number, start: Point, end: Point): Point => ({
   y: (1 - lambda) * start.y + lambda * end.y,
 });
 
+export interface ArrowDiagramArrowProps {
+  operation: Operation;
+  start: Point;
+  end: Point;
+  tooltipPlacement: OperationTooltipPlacement;
+}
+
 interface ArrowDiagramProps {
   width: number;
   height: number;
-  arrows: { operation: Operation; start: Point; end: Point }[];
+  arrows: ArrowDiagramArrowProps[];
 }
 
 export const ArrowDiagram: FunctionComponent<ArrowDiagramProps> = ({ width, height, arrows }) => {
@@ -78,14 +85,21 @@ export const ArrowDiagram: FunctionComponent<ArrowDiagramProps> = ({ width, heig
           />
         ))}
       </svg>
-      {arrows.map(({ operation, start, end }, i) => {
+      {arrows.map(({ operation, start, end, tooltipPlacement }, i) => {
         const centerPoint = interpolate(0.45, start, end);
         const style: CSSProperties = {
           position: "absolute",
           left: `${centerPoint.x - 10}px`,
           top: `${centerPoint.y - 10}px`,
         };
-        return <OperationVisualization key={i} operation={operation} style={style} />;
+        return (
+          <OperationVisualization
+            key={i}
+            operation={operation}
+            tooltipPlacement={tooltipPlacement}
+            style={style}
+          />
+        );
       })}
     </div>
   );

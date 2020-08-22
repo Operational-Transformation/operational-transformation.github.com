@@ -14,7 +14,7 @@ import {
 } from "./types/clientLog";
 import { OperationVisualization } from "./OperationVisualization";
 import { createUseStyles } from "react-jss";
-import { ArrowDiagram } from "./ArrowDiagram";
+import { ArrowDiagram, ArrowDiagramArrowProps } from "./ArrowDiagram";
 
 const useStyles = createUseStyles({
   clientLog: {
@@ -131,11 +131,31 @@ const ReceivedServerOperationWhileAwaitingOperationVisualization: FunctionCompon
   const bottomLeft = { x: 15, y: 120 };
   const bottomRight = { x: 120, y: 125 };
 
-  const arrows = [
-    { operation: awaitedOperation, start: topLeft, end: topRight },
-    { operation: transformedAwaitedOperation, start: bottomLeft, end: bottomRight },
-    { operation: receivedOperation, start: topLeft, end: bottomLeft },
-    { operation: transformedReceivedOperation, start: topRight, end: bottomRight },
+  const arrows: ArrowDiagramArrowProps[] = [
+    {
+      operation: awaitedOperation,
+      start: topLeft,
+      end: topRight,
+      tooltipPlacement: "top",
+    },
+    {
+      operation: transformedAwaitedOperation,
+      start: bottomLeft,
+      end: bottomRight,
+      tooltipPlacement: "bottom",
+    },
+    {
+      operation: receivedOperation,
+      start: topLeft,
+      end: bottomLeft,
+      tooltipPlacement: "left",
+    },
+    {
+      operation: transformedReceivedOperation,
+      start: topRight,
+      end: bottomRight,
+      tooltipPlacement: "right",
+    },
   ];
 
   return (
@@ -183,14 +203,39 @@ const ReceivedServerOperationWhileAwaitingOperationWithBufferVisualization: Func
   const bottomCenter = { x: 120, y: 125 };
   const bottomRight = { x: 225, y: 130 };
 
-  const arrows = [
-    { operation: awaitedOperation, start: topLeft, end: topCenter },
-    { operation: transformedAwaitedOperation, start: bottomLeft, end: bottomCenter },
-    { operation: bufferOperation, start: topCenter, end: topRight },
-    { operation: transformedBufferOperation, start: bottomCenter, end: bottomRight },
-    { operation: receivedOperation, start: topLeft, end: bottomLeft },
-    { operation: onceTransformedReceivedOperation, start: topCenter, end: bottomCenter },
-    { operation: twiceTransformedReceivedOperation, start: topRight, end: bottomRight },
+  const arrows: ArrowDiagramArrowProps[] = [
+    { operation: awaitedOperation, start: topLeft, end: topCenter, tooltipPlacement: "top" },
+    {
+      operation: transformedAwaitedOperation,
+      start: bottomLeft,
+      end: bottomCenter,
+      tooltipPlacement: "bottom",
+    },
+    { operation: bufferOperation, start: topCenter, end: topRight, tooltipPlacement: "top" },
+    {
+      operation: transformedBufferOperation,
+      start: bottomCenter,
+      end: bottomRight,
+      tooltipPlacement: "bottom",
+    },
+    {
+      operation: receivedOperation,
+      start: topLeft,
+      end: bottomLeft,
+      tooltipPlacement: "left",
+    },
+    {
+      operation: onceTransformedReceivedOperation,
+      start: topCenter,
+      end: bottomCenter,
+      tooltipPlacement: "bottom",
+    },
+    {
+      operation: twiceTransformedReceivedOperation,
+      start: topRight,
+      end: bottomRight,
+      tooltipPlacement: "right",
+    },
   ];
 
   return (

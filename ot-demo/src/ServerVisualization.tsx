@@ -57,7 +57,7 @@ export const ServerVisualization: FunctionComponent<ServerVisualizationProps> = 
             {state.operations.length === 0 ? <>none yet</> : <></>}
             {state.operations.map((operation) => (
               <OperationVisualization
-                key={operation.meta.key}
+                key={operation.meta.id}
                 operation={operation}
                 className={classes.operationInLog}
               />
