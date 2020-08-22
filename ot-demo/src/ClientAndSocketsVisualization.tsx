@@ -218,7 +218,11 @@ const SynchronizationStateVisualization: FunctionComponent<{
 
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED:
-      return <p className={clientClasses.synchronizationState}>{stateLabel} Synchronized</p>;
+      return (
+        <p className={clientClasses.synchronizationState}>
+          {stateLabel} Synchronized at server revision {synchronizationState.serverRevision}
+        </p>
+      );
     case SynchronizationStateStatus.AWAITING_OPERATION:
       return (
         <p className={clientClasses.synchronizationState}>
