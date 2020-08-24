@@ -26,8 +26,19 @@ const renderTextOperation = (textOperation: TextOperation) =>
     return [...(i > 0 ? [", "] : []), renderOp(op)];
   });
 
-const renderOperation = (operation: Operation): JSX.Element => (
-  <>{renderTextOperation(operation.textOperation)}</>
+interface OperationWithOptionalRevision extends Operation {
+  revision?: number;
+}
+
+const renderOperation = (operation: OperationWithOptionalRevision): JSX.Element => (
+  <>
+    {operation.revision !== undefined ? (
+      <p style={{ textAlign: "center", fontWeight: "bold" }}>Revision: {operation.revision}</p>
+    ) : (
+      <></>
+    )}
+    <p>{renderTextOperation(operation.textOperation)}</p>
+  </>
 );
 
 const useOperationStyles = createUseStyles({
@@ -49,7 +60,7 @@ export type OperationTooltipPlacement = "top" | "bottom" | "left" | "right";
 
 interface OperationProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, "onMouseEnter" | "onMouseLeave"> {
-  operation: Operation;
+  operation: OperationWithOptionalRevision;
   tooltipPlacement?: OperationTooltipPlacement;
 }
 
