@@ -117,7 +117,13 @@ function processClientUserOperation(
 }
 
 function clientUserOperation(
-  client: ClientAndSocketsVisualizationState,
+  {
+    synchronizationState,
+    clientLog,
+    toServer,
+    fromServer,
+    text,
+  }: ClientAndSocketsVisualizationState,
   operation: TextOperation,
   clientName: ClientName,
 ): ClientAndSocketsVisualizationState {
@@ -125,14 +131,14 @@ function clientUserOperation(
     newSynchronizationState,
     operationsToSendToServer,
     newClientLogEntry,
-  } = processClientUserOperation(client.synchronizationState, operation, clientName);
+  } = processClientUserOperation(synchronizationState, operation, clientName);
 
   return {
     synchronizationState: newSynchronizationState,
-    clientLog: [newClientLogEntry, ...client.clientLog],
-    toServer: [...client.toServer, ...operationsToSendToServer],
-    fromServer: client.fromServer,
-    text: operation.apply(client.text),
+    clientLog: [{ entry: newClientLogEntry, stateBefore: synchronizationState }, ...clientLog],
+    toServer: [...toServer, ...operationsToSendToServer],
+    fromServer,
+    text: operation.apply(text),
   };
 }
 
@@ -320,7 +326,7 @@ function clientReceiveOperation({
     toServer:
       operationToSendToServer === undefined ? toServer : [...toServer, operationToSendToServer],
     fromServer: remainingOperations,
-    clientLog: [newClientLogEntry, ...clientLog],
+    clientLog: [{ entry: newClientLogEntry, stateBefore: synchronizationState }, ...clientLog],
   };
   return { newClientState, transformedReceivedOperationToApply };
 }

@@ -22,8 +22,6 @@ export type ClientLogEntry =
   | ReceivedServerOperationWhileAwaitingOperation
   | ReceivedServerOperationWhileAwaitingOperationWithBuffer;
 
-export type ClientLog = ClientLogEntry[];
-
 export interface UserEditImmediatelySentToServer {
   type: ClientEntryType.USER_EDIT_IMMEDIATELY_SENT_TO_SERVER;
   operation: OperationAndRevision;

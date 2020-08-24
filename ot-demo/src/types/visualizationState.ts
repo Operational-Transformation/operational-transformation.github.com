@@ -1,5 +1,5 @@
 import { Operation, OperationAndRevision } from "./operation";
-import { ClientLog } from "./clientLog";
+import { ClientLogEntry } from "./clientLog";
 
 export type Queue<A> = A[];
 
@@ -39,6 +39,11 @@ export type SynchronizationState =
   | SynchronizationStateSynchronized
   | SynchronizationStateAwaitingAck
   | SynchronizationStateAwaitingAckWithOperation;
+
+export type ClientLog = {
+  entry: ClientLogEntry;
+  stateBefore: SynchronizationState;
+}[];
 
 export interface ClientAndSocketsVisualizationState {
   toServer: Queue<OperationAndRevision>;

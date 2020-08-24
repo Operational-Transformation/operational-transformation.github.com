@@ -1,10 +1,4 @@
-import {
-  ClientAndSocketsVisualizationState,
-  ClientName,
-  Queue,
-  SynchronizationState,
-  SynchronizationStateStatus,
-} from "./types/visualizationState";
+import { ClientAndSocketsVisualizationState, ClientName, Queue } from "./types/visualizationState";
 import { TextOperation } from "ot";
 import { createUseStyles } from "react-jss";
 import React, {
@@ -31,6 +25,7 @@ import { OperationVisualization } from "./OperationVisualization";
 import { Operation, OperationAndRevision } from "./types/operation";
 import { ClientLogVisualization } from "./ClientLogVisualization";
 import { useIsInitialRender } from "./hooks/useIsInitialRender";
+import { SynchronizationStateVisualization } from "./SynchronizationStateVisualization";
 
 const useSocketOperationStyles = createUseStyles({
   operationInSocket: {
@@ -201,14 +196,6 @@ const useClientStyles = createUseStyles({
     position: "relative",
     height: "150px",
   },
-  synchronizationState: {
-    lineHeight: "24px",
-    margin: "0 0 12px",
-  },
-  synchronizationStateOperation: {
-    margin: "0 2px",
-    verticalAlign: "-4px",
-  },
   codeMirrorContainer: {
     border: "1px solid #ccc",
     flex: "1",
@@ -216,52 +203,10 @@ const useClientStyles = createUseStyles({
       height: "150px",
     },
   },
-  stateLabel: {
-    color: "#666",
+  synchronizationState: {
+    margin: "0 0 12px",
   },
 });
-
-const SynchronizationStateVisualization: FunctionComponent<{
-  synchronizationState: SynchronizationState;
-}> = ({ synchronizationState }) => {
-  const clientClasses = useClientStyles();
-
-  const stateLabel = <span className={clientClasses.stateLabel}>State:</span>;
-
-  switch (synchronizationState.status) {
-    case SynchronizationStateStatus.SYNCHRONIZED:
-      return (
-        <p className={clientClasses.synchronizationState}>
-          {stateLabel} Synchronized at server revision {synchronizationState.serverRevision}
-        </p>
-      );
-    case SynchronizationStateStatus.AWAITING_OPERATION:
-      return (
-        <p className={clientClasses.synchronizationState}>
-          {stateLabel} Awaiting operation{" "}
-          <OperationVisualization
-            operation={synchronizationState.awaitedOperation}
-            className={clientClasses.synchronizationStateOperation}
-          />
-        </p>
-      );
-    case SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER:
-      return (
-        <p className={clientClasses.synchronizationState}>
-          {stateLabel} Awaiting operation{" "}
-          <OperationVisualization
-            operation={synchronizationState.awaitedOperation}
-            className={clientClasses.synchronizationStateOperation}
-          />{" "}
-          with buffer{" "}
-          <OperationVisualization
-            operation={synchronizationState.buffer}
-            className={clientClasses.synchronizationStateOperation}
-          />
-        </p>
-      );
-  }
-};
 
 export interface ClientAndSocketsVisualizationProps {
   clientName: ClientName;
@@ -355,6 +300,7 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
         </h2>
         <SynchronizationStateVisualization
           synchronizationState={props.state.synchronizationState}
+          className={clientClasses.synchronizationState}
         />
         <CodeMirror
           className={clientClasses.codeMirrorContainer}

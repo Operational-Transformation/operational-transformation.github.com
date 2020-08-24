@@ -1,7 +1,6 @@
-import React, { CSSProperties, FunctionComponent, useCallback, useState } from "react";
+import React, { FunctionComponent, useCallback, useState } from "react";
 import {
   ClientEntryType,
-  ClientLog,
   ClientLogEntry,
   ReceivedOwnOperation,
   ReceivedOwnOperationAndSentBuffer,
@@ -15,19 +14,35 @@ import {
 import { OperationVisualization } from "./OperationVisualization";
 import { createUseStyles } from "react-jss";
 import { ArrowDiagram, ArrowDiagramArrowProps } from "./ArrowDiagram";
+import { ClientLog, SynchronizationState } from "./types/visualizationState";
+import { SynchronizationStateVisualization } from "./SynchronizationStateVisualization";
 
 const useStyles = createUseStyles({
   clientLog: {
     margin: "20px 15px",
     lineHeight: "24px",
   },
+  clientLogItem: {
+    transition: "margin 0.5s ease, height 0.5s ease",
+    overflow: "hidden",
+    position: "relative",
+    "& > div": {
+      position: "absolute",
+      left: "0",
+      right: "0",
+      bottom: "0",
+    },
+  },
   clientLogEntry: {
-    background: "#f7f7f7",
-    padding: "10px 20px",
+    padding: "12px 20px",
   },
   inlineOperation: {
     margin: "0 2px",
     verticalAlign: "-4px",
+  },
+  pastState: {
+    background: "#f7f7f7",
+    padding: "12px 20px",
   },
 });
 
@@ -292,9 +307,10 @@ const renderClientLogEntry = (clientLogEntry: ClientLogEntry): NonNullable<React
   }
 };
 
-const ClientLogEntryVisualization: FunctionComponent<{ clientLogEntry: ClientLogEntry }> = ({
-  clientLogEntry,
-}) => {
+const ClientLogItemVisualization: FunctionComponent<{
+  entry: ClientLogEntry;
+  stateBefore: SynchronizationState;
+}> = ({ entry, stateBefore }) => {
   const classes = useStyles();
 
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined);
@@ -304,21 +320,20 @@ const ClientLogEntryVisualization: FunctionComponent<{ clientLogEntry: ClientLog
     setMeasuredHeight(rect.height);
   }, []);
 
-  const outerDivStyles: CSSProperties = {
-    transition: "margin 0.5s ease, height 0.5s ease",
-    overflow: "hidden",
-  };
-
   return (
     <div
+      className={classes.clientLogItem}
       style={
         measuredHeight === undefined
-          ? { height: "1px", margin: "-100px 0 100px", ...outerDivStyles }
-          : { height: `${measuredHeight}px`, margin: "0 0 10px", ...outerDivStyles }
+          ? { height: "1px", margin: "-100px 0 100px" }
+          : { height: `${measuredHeight}px`, margin: "0" }
       }
     >
-      <div ref={setInnerDiv} className={classes.clientLogEntry}>
-        {renderClientLogEntry(clientLogEntry)}
+      <div ref={setInnerDiv}>
+        <div className={classes.clientLogEntry}>{renderClientLogEntry(entry)}</div>
+        <div className={classes.pastState}>
+          <SynchronizationStateVisualization synchronizationState={stateBefore} />
+        </div>
       </div>
     </div>
   );
@@ -335,10 +350,11 @@ export const ClientLogVisualization: FunctionComponent<ClientLogVisualizationPro
 
   return (
     <div className={classes.clientLog}>
-      {clientLog.map((clientLogEntry, i) => (
-        <ClientLogEntryVisualization
+      {clientLog.map(({ entry, stateBefore }, i) => (
+        <ClientLogItemVisualization
           key={`log-entry-${clientLog.length - i}`}
-          clientLogEntry={clientLogEntry}
+          entry={entry}
+          stateBefore={stateBefore}
         />
       ))}
     </div>
