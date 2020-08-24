@@ -13,13 +13,13 @@ import {
 } from "./types/clientLog";
 import { OperationVisualization } from "./OperationVisualization";
 import { createUseStyles } from "react-jss";
-import { ArrowDiagram, ArrowDiagramArrowProps } from "./ArrowDiagram";
+import { ArrowDiagram, ArrowDiagramArrowProps, SvgArrow } from "./ArrowDiagram";
 import { ClientLog, SynchronizationState } from "./types/visualizationState";
 import { SynchronizationStateVisualization } from "./SynchronizationStateVisualization";
 
 const useStyles = createUseStyles({
   clientLog: {
-    margin: "20px 15px",
+    margin: "0 15px 20px",
     lineHeight: "24px",
   },
   clientLogItem: {
@@ -34,14 +34,14 @@ const useStyles = createUseStyles({
     },
   },
   clientLogEntry: {
-    padding: "12px 20px",
+    padding: "12px 20px 12px 40px",
   },
   inlineOperation: {
     margin: "0 2px",
     verticalAlign: "-4px",
   },
   pastState: {
-    background: "#f7f7f7",
+    background: "#eee",
     padding: "12px 20px",
   },
 });
@@ -330,6 +330,21 @@ const ClientLogItemVisualization: FunctionComponent<{
       }
     >
       <div ref={setInnerDiv}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="40"
+          height={measuredHeight ?? "0"}
+          style={{ position: "absolute", zIndex: -1 }}
+        >
+          <SvgArrow
+            start={{ x: 20, y: measuredHeight ?? 1 }}
+            end={{ x: 20, y: 0 }}
+            shaftWidth={8}
+            tipLength={28}
+            tipWidth={20}
+            color="#eee"
+          />
+        </svg>
         <div className={classes.clientLogEntry}>{renderClientLogEntry(entry)}</div>
         <div className={classes.pastState}>
           <SynchronizationStateVisualization synchronizationState={stateBefore} />

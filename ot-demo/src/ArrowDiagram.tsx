@@ -8,7 +8,7 @@ interface Point {
   y: number;
 }
 
-const SvgArrow: FunctionComponent<{
+export const SvgArrow: FunctionComponent<{
   start: Point;
   end: Point;
   shaftWidth: number;
