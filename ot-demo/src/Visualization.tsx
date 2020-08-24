@@ -39,7 +39,7 @@ const initialRevision = 0;
 const initialClientAndSocketsVisualizationState: ClientAndSocketsVisualizationState = {
   toServer: [],
   fromServer: [],
-  synchronizationState: {
+  initialSynchronizationState: {
     status: SynchronizationStateStatus.SYNCHRONIZED,
     serverRevision: initialRevision,
   },

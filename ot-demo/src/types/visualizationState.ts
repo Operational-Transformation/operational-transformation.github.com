@@ -40,15 +40,17 @@ export type SynchronizationState =
   | SynchronizationStateAwaitingAck
   | SynchronizationStateAwaitingAckWithOperation;
 
-export type ClientLog = {
+export interface ClientLogItem {
   entry: ClientLogEntry;
-  stateBefore: SynchronizationState;
-}[];
+  newState: SynchronizationState;
+}
+
+export type ClientLog = ClientLogItem[];
 
 export interface ClientAndSocketsVisualizationState {
   toServer: Queue<OperationAndRevision>;
   fromServer: Queue<OperationAndRevision>;
-  synchronizationState: SynchronizationState;
+  initialSynchronizationState: SynchronizationState;
   clientLog: ClientLog;
   text: string;
 }

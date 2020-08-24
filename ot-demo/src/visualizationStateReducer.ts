@@ -116,29 +116,31 @@ function processClientUserOperation(
   }
 }
 
+function getLatestSynchronizationState({
+  clientLog,
+  initialSynchronizationState,
+}: ClientAndSocketsVisualizationState) {
+  return clientLog.length > 0 ? clientLog[0].newState : initialSynchronizationState;
+}
+
 function clientUserOperation(
-  {
-    synchronizationState,
-    clientLog,
-    toServer,
-    fromServer,
-    text,
-  }: ClientAndSocketsVisualizationState,
+  clientState: ClientAndSocketsVisualizationState,
   operation: TextOperation,
   clientName: ClientName,
 ): ClientAndSocketsVisualizationState {
+  const { initialSynchronizationState, clientLog, toServer, fromServer, text } = clientState;
   const {
     newSynchronizationState,
     operationsToSendToServer,
     newClientLogEntry,
-  } = processClientUserOperation(synchronizationState, operation, clientName);
+  } = processClientUserOperation(getLatestSynchronizationState(clientState), operation, clientName);
 
   return {
-    synchronizationState: newSynchronizationState,
-    clientLog: [{ entry: newClientLogEntry, stateBefore: synchronizationState }, ...clientLog],
+    clientLog: [{ entry: newClientLogEntry, newState: newSynchronizationState }, ...clientLog],
     toServer: [...toServer, ...operationsToSendToServer],
     fromServer,
     text: operation.apply(text),
+    initialSynchronizationState,
   };
 }
 
@@ -300,25 +302,21 @@ function processOperationFromServer(
   }
 }
 
-function clientReceiveOperation({
-  synchronizationState,
-  clientLog,
-  fromServer,
-  toServer,
-  text,
-}: ClientAndSocketsVisualizationState): {
+function clientReceiveOperation(
+  clientState: ClientAndSocketsVisualizationState,
+): {
   newClientState: ClientAndSocketsVisualizationState;
   transformedReceivedOperationToApply: Operation | undefined;
 } {
+  const { initialSynchronizationState, clientLog, fromServer, toServer, text } = clientState;
   const [operation, ...remainingOperations] = fromServer;
   const {
     newSynchronizationState,
     operationToSendToServer,
     transformedReceivedOperationToApply,
     newClientLogEntry,
-  } = processOperationFromServer(synchronizationState, operation);
+  } = processOperationFromServer(getLatestSynchronizationState(clientState), operation);
   const newClientState: ClientAndSocketsVisualizationState = {
-    synchronizationState: newSynchronizationState,
     text:
       transformedReceivedOperationToApply === undefined
         ? text
@@ -326,7 +324,8 @@ function clientReceiveOperation({
     toServer:
       operationToSendToServer === undefined ? toServer : [...toServer, operationToSendToServer],
     fromServer: remainingOperations,
-    clientLog: [{ entry: newClientLogEntry, stateBefore: synchronizationState }, ...clientLog],
+    clientLog: [{ entry: newClientLogEntry, newState: newSynchronizationState }, ...clientLog],
+    initialSynchronizationState,
   };
   return { newClientState, transformedReceivedOperationToApply };
 }

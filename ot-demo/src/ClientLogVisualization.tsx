@@ -14,7 +14,7 @@ import {
 import { OperationVisualization } from "./OperationVisualization";
 import { createUseStyles } from "react-jss";
 import { ArrowDiagram, ArrowDiagramArrowProps, SvgArrow } from "./ArrowDiagram";
-import { ClientLog, SynchronizationState } from "./types/visualizationState";
+import { ClientLog, ClientLogItem, SynchronizationState } from "./types/visualizationState";
 import { SynchronizationStateVisualization } from "./SynchronizationStateVisualization";
 
 const useStyles = createUseStyles({
@@ -39,10 +39,6 @@ const useStyles = createUseStyles({
   inlineOperation: {
     margin: "0 2px",
     verticalAlign: "-4px",
-  },
-  pastState: {
-    background: "#eee",
-    padding: "12px 20px",
   },
 });
 
@@ -307,10 +303,7 @@ const renderClientLogEntry = (clientLogEntry: ClientLogEntry): NonNullable<React
   }
 };
 
-const ClientLogItemVisualization: FunctionComponent<{
-  entry: ClientLogEntry;
-  stateBefore: SynchronizationState;
-}> = ({ entry, stateBefore }) => {
+const ClientLogItemVisualization: FunctionComponent<ClientLogItem> = ({ entry, newState }) => {
   const classes = useStyles();
 
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined);
@@ -337,18 +330,16 @@ const ClientLogItemVisualization: FunctionComponent<{
           style={{ position: "absolute", zIndex: -1 }}
         >
           <SvgArrow
-            start={{ x: 20, y: measuredHeight ?? 1 }}
-            end={{ x: 20, y: 0 }}
+            start={{ x: 20, y: (measuredHeight ?? 0) - 2 }}
+            end={{ x: 20, y: 50 }}
             shaftWidth={8}
             tipLength={28}
             tipWidth={20}
             color="#eee"
           />
         </svg>
+        <SynchronizationStateVisualization synchronizationState={newState} />
         <div className={classes.clientLogEntry}>{renderClientLogEntry(entry)}</div>
-        <div className={classes.pastState}>
-          <SynchronizationStateVisualization synchronizationState={stateBefore} />
-        </div>
       </div>
     </div>
   );
@@ -356,22 +347,25 @@ const ClientLogItemVisualization: FunctionComponent<{
 
 interface ClientLogVisualizationProps {
   clientLog: ClientLog;
+  initialSynchronizationState: SynchronizationState;
 }
 
 export const ClientLogVisualization: FunctionComponent<ClientLogVisualizationProps> = ({
   clientLog,
+  initialSynchronizationState,
 }) => {
   const classes = useStyles();
 
   return (
     <div className={classes.clientLog}>
-      {clientLog.map(({ entry, stateBefore }, i) => (
+      {clientLog.map(({ entry, newState }, i) => (
         <ClientLogItemVisualization
           key={`log-entry-${clientLog.length - i}`}
           entry={entry}
-          stateBefore={stateBefore}
+          newState={newState}
         />
       ))}
+      <SynchronizationStateVisualization synchronizationState={initialSynchronizationState} />
     </div>
   );
 };

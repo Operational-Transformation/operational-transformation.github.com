@@ -25,7 +25,6 @@ import { OperationVisualization } from "./OperationVisualization";
 import { Operation, OperationAndRevision } from "./types/operation";
 import { ClientLogVisualization } from "./ClientLogVisualization";
 import { useIsInitialRender } from "./hooks/useIsInitialRender";
-import { SynchronizationStateVisualization } from "./SynchronizationStateVisualization";
 
 const useSocketOperationStyles = createUseStyles({
   operationInSocket: {
@@ -188,6 +187,8 @@ const useClientStyles = createUseStyles({
     flexDirection: "column",
     position: "relative",
     zIndex: "10",
+    paddingBottom: "12px",
+    borderBottom: "2px solid #fff",
   },
   sockets: {
     display: "flex",
@@ -202,9 +203,6 @@ const useClientStyles = createUseStyles({
     "& .CodeMirror": {
       height: "150px",
     },
-  },
-  synchronizationState: {
-    margin: "0 0 12px",
   },
 });
 
@@ -237,14 +235,18 @@ export const getClientIcon = (clientName: ClientName): JSX.Element => {
   }
 };
 
-export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVisualizationProps> = (
-  props,
-) => {
-  const { onClientOperation, onClientReceiveClick } = props;
+export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVisualizationProps> = ({
+  onClientOperation,
+  onClientReceiveClick,
+  onServerReceiveClick,
+  state,
+  clientName,
+  className,
+}) => {
   const clientClasses = useClientStyles();
   const sharedClasses = useSharedStyles();
 
-  const [initialText] = useState(() => props.state.text);
+  const [initialText] = useState(() => state.text);
 
   const [editor, setEditor] = useState<Editor | undefined>(undefined);
   const applyingOperationFromServerRef = useRef<boolean>(false);
@@ -278,30 +280,26 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
   }, [editor, onClientReceiveClick]);
 
   return (
-    <div className={props.className}>
+    <div className={className}>
       <div className={clientClasses.sockets}>
         <Socket
           direction={SocketDirection.UP}
           tooltip="Receive next operation from client"
-          queue={props.state.toServer}
-          onReceiveClick={props.onServerReceiveClick}
+          queue={state.toServer}
+          onReceiveClick={onServerReceiveClick}
         />
         <Socket
           direction={SocketDirection.DOWN}
           tooltip="Receive next operation from server"
-          queue={props.state.fromServer}
+          queue={state.fromServer}
           onReceiveClick={onClientReceive}
         />
       </div>
       <div className={clsx(sharedClasses.site, clientClasses.client)}>
-        <h2 style={{ color: getClientColor(props.clientName) }}>
-          {getClientIcon(props.clientName)}
-          {props.clientName}
+        <h2 style={{ color: getClientColor(clientName) }}>
+          {getClientIcon(clientName)}
+          {clientName}
         </h2>
-        <SynchronizationStateVisualization
-          synchronizationState={props.state.synchronizationState}
-          className={clientClasses.synchronizationState}
-        />
         <CodeMirror
           className={clientClasses.codeMirrorContainer}
           options={editorConfiguration}
@@ -309,7 +307,10 @@ export const ClientAndSocketsVisualization: FunctionComponent<ClientAndSocketsVi
           editorDidMount={setEditor}
         />
       </div>
-      <ClientLogVisualization clientLog={props.state.clientLog} />
+      <ClientLogVisualization
+        clientLog={state.clientLog}
+        initialSynchronizationState={state.initialSynchronizationState}
+      />
     </div>
   );
 };

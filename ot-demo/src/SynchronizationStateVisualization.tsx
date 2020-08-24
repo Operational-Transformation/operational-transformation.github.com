@@ -2,11 +2,12 @@ import React, { FunctionComponent } from "react";
 import { SynchronizationState, SynchronizationStateStatus } from "./types/visualizationState";
 import { OperationVisualization } from "./OperationVisualization";
 import { createUseStyles } from "react-jss";
-import clsx from "clsx";
 
 const useStyles = createUseStyles({
   synchronizationState: {
     lineHeight: "24px",
+    background: "#eee",
+    padding: "12px 20px",
   },
   synchronizationStateOperation: {
     margin: "0 2px",
@@ -19,8 +20,7 @@ const useStyles = createUseStyles({
 
 export const SynchronizationStateVisualization: FunctionComponent<{
   synchronizationState: SynchronizationState;
-  className?: string;
-}> = ({ synchronizationState, className }) => {
+}> = ({ synchronizationState }) => {
   const clientClasses = useStyles();
 
   const stateLabel = <span className={clientClasses.stateLabel}>State:</span>;
@@ -28,13 +28,13 @@ export const SynchronizationStateVisualization: FunctionComponent<{
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED:
       return (
-        <p className={clsx(clientClasses.synchronizationState, className)}>
+        <p className={clientClasses.synchronizationState}>
           {stateLabel} Synchronized at server revision {synchronizationState.serverRevision}
         </p>
       );
     case SynchronizationStateStatus.AWAITING_OPERATION:
       return (
-        <p className={clsx(clientClasses.synchronizationState, className)}>
+        <p className={clientClasses.synchronizationState}>
           {stateLabel} Awaiting operation{" "}
           <OperationVisualization
             operation={synchronizationState.awaitedOperation}
@@ -44,7 +44,7 @@ export const SynchronizationStateVisualization: FunctionComponent<{
       );
     case SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER:
       return (
-        <p className={clsx(clientClasses.synchronizationState, className)}>
+        <p className={clientClasses.synchronizationState}>
           {stateLabel} Awaiting operation{" "}
           <OperationVisualization
             operation={synchronizationState.awaitedOperation}
