@@ -3,11 +3,6 @@ import { ClientLogEntry } from "./clientLog";
 
 export type Queue<A> = A[];
 
-export enum ClientName {
-  Alice = "Alice",
-  Bob = "Bob",
-}
-
 export interface ServerVisualizationState<SnapshotT, OpT> {
   operations: Operation<OpT>[];
   snapshot: SnapshotT;

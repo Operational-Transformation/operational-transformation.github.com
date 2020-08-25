@@ -15,11 +15,10 @@ import {
 import { makeServerVisualization } from "./ServerVisualization";
 import {
   ClientAndSocketsVisualizationState,
-  ClientName,
   SynchronizationStateStatus,
   VisualizationState,
 } from "./types/visualizationState";
-import { Operation } from "./types/operation";
+import { ClientName, Operation } from "./types/operation";
 import {
   ApplicationSpecificComponents,
   ApplicationSpecificFunctions,

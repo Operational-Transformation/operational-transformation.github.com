@@ -11,6 +11,7 @@
     "@types/codemirror": "0.0.97",
     "@types/jest": "^24.0.0",
     "@types/node": "^12.0.0",
+    "@types/ot": "0.0.3",
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "clsx": "^1.1.1",
@@ -29,7 +30,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "prettier": "prettier --write --config .prettierrc.yaml */**/*.{ts,tsx,css,json}"
+    "prettier": "prettier --write --config .prettierrc.yaml '**/{*,.[^.],.??*}.{ts,tsx,css,js,json}'",
+    "check": "depcruise --config .dependency-cruiser.js src"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -47,7 +49,7 @@
     ]
   },
   "devDependencies": {
-    "@types/ot": "0.0.3",
+    "dependency-cruiser": "^9.11.1",
     "prettier": "2.0.5"
   }
 }

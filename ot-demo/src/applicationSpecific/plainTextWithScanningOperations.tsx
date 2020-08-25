@@ -19,6 +19,8 @@ import React, {
 import { createUseStyles } from "react-jss";
 import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
 import "cm-show-invisibles";
+import "codemirror/lib/codemirror.css";
+import "codemirror/theme/material.css";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
 import { UnControlled as CodeMirror } from "react-codemirror2";
 

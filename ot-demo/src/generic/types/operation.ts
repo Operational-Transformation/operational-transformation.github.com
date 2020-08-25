@@ -1,8 +1,12 @@
-import { ClientName } from "./visualizationState";
 import { generateUuid } from "../util/uuid";
 import { CompositionFunction, TransformationFunction } from "./applicationSpecific";
 
 type OperationId = string; // persistent, not changed by transformation
+
+export enum ClientName {
+  Alice = "Alice",
+  Bob = "Bob",
+}
 
 interface OperationMeta {
   author: ClientName;

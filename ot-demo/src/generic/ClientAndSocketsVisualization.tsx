@@ -1,4 +1,4 @@
-import { ClientAndSocketsVisualizationState, ClientName, Queue } from "./types/visualizationState";
+import { ClientAndSocketsVisualizationState, Queue } from "./types/visualizationState";
 import { createUseStyles } from "react-jss";
 import React, {
   CSSProperties,
@@ -16,7 +16,7 @@ import ArrowUpward from "@material-ui/icons/ArrowUpward";
 import ArrowDownward from "@material-ui/icons/ArrowDownward";
 import Computer from "@material-ui/icons/Computer";
 import Tablet from "@material-ui/icons/Tablet";
-import { Operation, OperationAndRevision } from "./types/operation";
+import { ClientName, Operation, OperationAndRevision } from "./types/operation";
 import { useIsInitialRender } from "./hooks/useIsInitialRender";
 import { makeClientLogVisualization } from "./ClientLogVisualization";
 import { ApplicationSpecificComponents, EditorHandle } from "./types/applicationSpecific";

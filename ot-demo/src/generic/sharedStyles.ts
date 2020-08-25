@@ -1,5 +1,5 @@
 import { createUseStyles } from "react-jss";
-import { ClientName } from "./types/visualizationState";
+import { ClientName } from "./types/operation";
 
 export const useSharedStyles = createUseStyles({
   site: {

@@ -1,4 +1,5 @@
 import {
+  ClientName,
   composeOperation,
   createNewOperation,
   Operation,
@@ -7,7 +8,6 @@ import {
 } from "./types/operation";
 import {
   ClientAndSocketsVisualizationState,
-  ClientName,
   ServerVisualizationState,
   SynchronizationState,
   SynchronizationStateStatus,
