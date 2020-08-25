@@ -1,7 +1,12 @@
 import React from "react";
-import { Visualization } from "./Visualization";
+import { makeVisualization } from "./generic/Visualization";
 import { createUseStyles } from "react-jss";
-import { OperationHoverProvider } from "./OperationHoverProvider";
+import { OperationHoverProvider } from "./generic/OperationHoverProvider";
+import {
+  initialText,
+  plainTextWithScanningOperationsComponents,
+  plainTextWithScanningOperationsFunctions,
+} from "./applicationSpecific/plainTextWithScanningOperations";
 
 const useStyles = createUseStyles({
   wrapper: {
@@ -14,6 +19,11 @@ const useStyles = createUseStyles({
   },
 });
 
+const Visualization = makeVisualization(
+  plainTextWithScanningOperationsFunctions,
+  plainTextWithScanningOperationsComponents,
+);
+
 function App() {
   const classes = useStyles();
 
@@ -21,7 +31,7 @@ function App() {
     <OperationHoverProvider>
       <div className={classes.wrapper}>
         <h1 className={classes.header}>Visualization of OT with a central server</h1>
-        <Visualization />
+        <Visualization initialSnapshot={initialText} />
       </div>
     </OperationHoverProvider>
   );

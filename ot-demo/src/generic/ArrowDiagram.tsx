@@ -1,7 +1,7 @@
 import React, { CSSProperties, FunctionComponent } from "react";
 import { Operation } from "./types/operation";
 import { getClientColor } from "./sharedStyles";
-import { OperationTooltipPlacement, OperationVisualization } from "./OperationVisualization";
+import { OperationTooltipPlacement, OperationVisualizationComp } from "./OperationVisualization";
 
 interface Point {
   x: number;
@@ -46,20 +46,24 @@ const interpolate = (lambda: number, start: Point, end: Point): Point => ({
   y: (1 - lambda) * start.y + lambda * end.y,
 });
 
-export interface ArrowDiagramArrowProps {
-  operation: Operation;
+export interface ArrowDiagramArrowProps<OpT> {
+  operation: Operation<OpT>;
   start: Point;
   end: Point;
   tooltipPlacement: OperationTooltipPlacement;
 }
 
-interface ArrowDiagramProps {
+interface ArrowDiagramProps<OpT> {
   width: number;
   height: number;
-  arrows: ArrowDiagramArrowProps[];
+  arrows: ArrowDiagramArrowProps<OpT>[];
 }
 
-export const ArrowDiagram: FunctionComponent<ArrowDiagramProps> = ({ width, height, arrows }) => {
+type ArrowDiagram<OpT> = FunctionComponent<ArrowDiagramProps<OpT>>;
+
+export const makeArrowDiagram = <OpT extends unknown>(
+  OperationVisualization: OperationVisualizationComp<OpT>,
+): ArrowDiagram<OpT> => ({ width, height, arrows }) => {
   return (
     <div
       style={{

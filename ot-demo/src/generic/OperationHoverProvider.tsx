@@ -6,13 +6,13 @@ import React, {
   useContext,
   useState,
 } from "react";
-import { Operation } from "./types/operation";
+import { OperationWithoutPayload } from "./types/operation";
 
 type StateHandle<S> = [S, Dispatch<SetStateAction<S>>];
 
-type OperationHoverStateHandle = StateHandle<Operation | undefined>;
+type OperationHoverStateHandle = StateHandle<OperationWithoutPayload | undefined>;
 
-const OperationHoverContext = createContext<StateHandle<Operation | undefined>>([
+const OperationHoverContext = createContext<StateHandle<OperationWithoutPayload | undefined>>([
   undefined,
   () => {
     throw new Error("you need to wrap this with <OperationHoverProvider />");
@@ -20,7 +20,7 @@ const OperationHoverContext = createContext<StateHandle<Operation | undefined>>(
 ]);
 
 export const OperationHoverProvider: FunctionComponent = (props) => {
-  const stateHandle = useState<Operation | undefined>(undefined);
+  const stateHandle = useState<OperationWithoutPayload | undefined>(undefined);
 
   return (
     <OperationHoverContext.Provider value={stateHandle}>

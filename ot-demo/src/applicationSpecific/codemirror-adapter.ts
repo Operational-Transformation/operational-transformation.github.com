@@ -21,10 +21,7 @@ function posLe(a: Position, b: Position) {
 }
 
 function codemirrorDocLength(doc: Doc) {
-  return (
-    doc.indexFromPos({ line: doc.lastLine(), ch: 0 }) +
-    doc.getLine(doc.lastLine()).length
-  );
+  return doc.indexFromPos({ line: doc.lastLine(), ch: 0 }) + doc.getLine(doc.lastLine()).length;
 }
 
 export class CodeMirrorAdapter {
@@ -77,18 +74,12 @@ export class CodeMirrorAdapter {
         if (posLe(change.to, pos)) {
           return (
             indexFromPos({
-              line:
-                pos.line +
-                change.text.length -
-                1 -
-                (change.to.line - change.from.line),
+              line: pos.line + change.text.length - 1 - (change.to.line - change.from.line),
               ch:
                 change.to.line < pos.line
                   ? pos.ch
                   : change.text.length <= 1
-                  ? pos.ch -
-                    (change.to.ch - change.from.ch) +
-                    sumLengths(change.text)
+                  ? pos.ch - (change.to.ch - change.from.ch) + sumLengths(change.text)
                   : pos.ch - change.to.ch + last(change.text).length,
             }) +
             sumLengths(change.removed ?? []) -
@@ -100,9 +91,7 @@ export class CodeMirrorAdapter {
         }
         return (
           indexFromPos(change.from) +
-          sumLengths(
-            (change.removed ?? []).slice(0, pos.line - change.from.line),
-          ) +
+          sumLengths((change.removed ?? []).slice(0, pos.line - change.from.line)) +
           1 +
           pos.ch
         );
@@ -140,10 +129,7 @@ export class CodeMirrorAdapter {
   }
 
   // Singular form for backwards compatibility.
-  static operationFromCodeMirrorChange(
-    changes: EditorChangeLinkedList[],
-    doc: Doc,
-  ) {
+  static operationFromCodeMirrorChange(changes: EditorChangeLinkedList[], doc: Doc) {
     return CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, doc);
   }
 

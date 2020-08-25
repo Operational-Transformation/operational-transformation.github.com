@@ -1,4 +1,3 @@
-import { TextOperation } from "ot";
 import {
   composeOperation,
   createNewOperation,
@@ -15,24 +14,30 @@ import {
   VisualizationState,
 } from "./types/visualizationState";
 import { ClientEntryType, ClientLogEntry } from "./types/clientLog";
+import {
+  ApplicationSpecificFunctions,
+  CompositionFunction,
+  TransformationFunction,
+} from "./types/applicationSpecific";
 
-function receiveOperationFromClient(
-  server: ServerVisualizationState,
-  operation: OperationAndRevision,
+function receiveOperationFromClient<SnapshotT, OpT>(
+  functions: Pick<ApplicationSpecificFunctions<SnapshotT, OpT>, "transform" | "apply">,
+  server: ServerVisualizationState<SnapshotT, OpT>,
+  operation: OperationAndRevision<OpT>,
 ): {
-  newServerState: ServerVisualizationState;
-  operationToBroadcast: OperationAndRevision;
+  newServerState: ServerVisualizationState<SnapshotT, OpT>;
+  operationToBroadcast: OperationAndRevision<OpT>;
 } {
   const concurrentOperations = server.operations.slice(operation.revision);
 
-  const transformedOperation = concurrentOperations.reduce<OperationAndRevision>(
-    (op, concurrentOp) => transformOperation(concurrentOp, op)[1],
+  const transformedOperation = concurrentOperations.reduce<OperationAndRevision<OpT>>(
+    (op, concurrentOp) => transformOperation(functions.transform, concurrentOp, op)[1],
     operation,
   );
 
-  const newServerState: ServerVisualizationState = {
+  const newServerState: ServerVisualizationState<SnapshotT, OpT> = {
     operations: [...server.operations, transformedOperation],
-    text: transformedOperation.textOperation.apply(server.text),
+    snapshot: functions.apply(transformedOperation.base, server.snapshot),
   };
   return { operationToBroadcast: transformedOperation, newServerState };
 }
@@ -42,30 +47,37 @@ export interface Lens<S, A> {
   set: (s: S, a: A) => S;
 }
 
-export const aliceLens: Lens<VisualizationState, ClientAndSocketsVisualizationState> = {
+export const makeAliceLens = <SnapshotT, OpT>(): Lens<
+  VisualizationState<SnapshotT, OpT>,
+  ClientAndSocketsVisualizationState<SnapshotT, OpT>
+> => ({
   get: (globalState) => globalState.alice,
   set: (globalState, aliceState) => ({ ...globalState, alice: aliceState }),
-};
+});
 
-export const bobLens: Lens<VisualizationState, ClientAndSocketsVisualizationState> = {
+export const makeBobLens = <SnapshotT, OpT>(): Lens<
+  VisualizationState<SnapshotT, OpT>,
+  ClientAndSocketsVisualizationState<SnapshotT, OpT>
+> => ({
   get: (globalState) => globalState.bob,
   set: (globalState, bobState) => ({ ...globalState, bob: bobState }),
-};
+});
 
-function processClientUserOperation(
-  synchronizationState: SynchronizationState,
-  textOperation: TextOperation,
+function processClientUserOperation<OpT>(
+  compositionFunction: CompositionFunction<OpT>,
+  synchronizationState: SynchronizationState<OpT>,
+  baseOperation: OpT,
   clientName: ClientName,
 ): {
-  newSynchronizationState: SynchronizationState;
-  operationsToSendToServer: OperationAndRevision[];
-  newClientLogEntry: ClientLogEntry;
+  newSynchronizationState: SynchronizationState<OpT>;
+  operationsToSendToServer: OperationAndRevision<OpT>[];
+  newClientLogEntry: ClientLogEntry<OpT>;
 } {
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED: {
       const revision = synchronizationState.serverRevision;
-      const operationToSendToServer = {
-        ...createNewOperation(textOperation, clientName),
+      const operationToSendToServer: OperationAndRevision<OpT> = {
+        ...createNewOperation(baseOperation, clientName),
         revision,
       };
       return {
@@ -82,8 +94,8 @@ function processClientUserOperation(
     }
     case SynchronizationStateStatus.AWAITING_OPERATION: {
       const revision = synchronizationState.awaitedOperation.revision + 1;
-      let buffer: OperationAndRevision = {
-        ...createNewOperation(textOperation, clientName),
+      let buffer: OperationAndRevision<OpT> = {
+        ...createNewOperation(baseOperation, clientName),
         revision,
       };
       return {
@@ -104,79 +116,95 @@ function processClientUserOperation(
         newSynchronizationState: {
           status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
           awaitedOperation: synchronizationState.awaitedOperation,
-          buffer: composeOperation(synchronizationState.buffer, textOperation),
+          buffer: composeOperation(compositionFunction, synchronizationState.buffer, baseOperation),
         },
         operationsToSendToServer: [],
         newClientLogEntry: {
           type: ClientEntryType.USER_EDIT_ADDED_TO_BUFFER,
-          textOperation,
+          base: baseOperation,
         },
       };
     }
   }
 }
 
-function getLatestSynchronizationState({
+function getLatestSynchronizationState<SnapshotT, OpT>({
   clientLog,
   initialSynchronizationState,
-}: ClientAndSocketsVisualizationState) {
+}: ClientAndSocketsVisualizationState<SnapshotT, OpT>) {
   return clientLog.length > 0 ? clientLog[0].newState : initialSynchronizationState;
 }
 
-function clientUserOperation(
-  clientState: ClientAndSocketsVisualizationState,
-  operation: TextOperation,
+function clientUserOperation<SnapshotT, OpT>(
+  functions: Pick<ApplicationSpecificFunctions<SnapshotT, OpT>, "compose" | "apply">,
+  clientState: ClientAndSocketsVisualizationState<SnapshotT, OpT>,
+  baseOperation: OpT,
   clientName: ClientName,
-): ClientAndSocketsVisualizationState {
-  const { initialSynchronizationState, clientLog, toServer, fromServer, text } = clientState;
+): ClientAndSocketsVisualizationState<SnapshotT, OpT> {
+  const { initialSynchronizationState, clientLog, toServer, fromServer, snapshot } = clientState;
   const {
     newSynchronizationState,
     operationsToSendToServer,
     newClientLogEntry,
-  } = processClientUserOperation(getLatestSynchronizationState(clientState), operation, clientName);
+  } = processClientUserOperation(
+    functions.compose,
+    getLatestSynchronizationState(clientState),
+    baseOperation,
+    clientName,
+  );
 
   return {
     clientLog: [{ entry: newClientLogEntry, newState: newSynchronizationState }, ...clientLog],
     toServer: [...toServer, ...operationsToSendToServer],
     fromServer,
-    text: operation.apply(text),
+    snapshot: functions.apply(baseOperation, snapshot),
     initialSynchronizationState,
   };
 }
 
-export function onClientOperation(
-  visualizationState: VisualizationState,
-  clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
+export function onClientOperation<SnapshotT, OpT>(
+  functions: Pick<ApplicationSpecificFunctions<SnapshotT, OpT>, "compose" | "apply">,
+  visualizationState: VisualizationState<SnapshotT, OpT>,
+  clientLens: Lens<
+    VisualizationState<SnapshotT, OpT>,
+    ClientAndSocketsVisualizationState<SnapshotT, OpT>
+  >,
   clientName: ClientName,
-  operation: TextOperation,
-): VisualizationState {
+  baseOperation: OpT,
+): VisualizationState<SnapshotT, OpT> {
   const newClientState = clientUserOperation(
+    functions,
     clientLens.get(visualizationState),
-    operation,
+    baseOperation,
     clientName,
   );
   return clientLens.set(visualizationState, newClientState);
 }
 
-function sendOperationToClient(
-  client: ClientAndSocketsVisualizationState,
-  operation: OperationAndRevision,
-): ClientAndSocketsVisualizationState {
+function sendOperationToClient<SnapshotT, OpT>(
+  client: ClientAndSocketsVisualizationState<SnapshotT, OpT>,
+  operation: OperationAndRevision<OpT>,
+): ClientAndSocketsVisualizationState<SnapshotT, OpT> {
   return {
     ...client,
     fromServer: [...client.fromServer, operation],
   };
 }
 
-export function onServerReceive(
-  visualizationState: VisualizationState,
-  clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
-): VisualizationState {
+export function onServerReceive<SnapshotT, OpT>(
+  functions: Pick<ApplicationSpecificFunctions<SnapshotT, OpT>, "transform" | "apply">,
+  visualizationState: VisualizationState<SnapshotT, OpT>,
+  clientLens: Lens<
+    VisualizationState<SnapshotT, OpT>,
+    ClientAndSocketsVisualizationState<SnapshotT, OpT>
+  >,
+): VisualizationState<SnapshotT, OpT> {
   const clientState = clientLens.get(visualizationState);
   const [operation, ...remainingOperations] = clientState.toServer;
   const newClientState = { ...clientState, toServer: remainingOperations };
   const nextVisualizationState = clientLens.set(visualizationState, newClientState);
   const { newServerState, operationToBroadcast } = receiveOperationFromClient(
+    functions,
     nextVisualizationState.server,
     operation,
   );
@@ -187,18 +215,19 @@ export function onServerReceive(
   };
 }
 
-function processOperationFromServer(
-  synchronizationState: SynchronizationState,
-  receivedOperation: OperationAndRevision,
+function processOperationFromServer<OpT>(
+  transformationFunction: TransformationFunction<OpT>,
+  synchronizationState: SynchronizationState<OpT>,
+  receivedOperation: OperationAndRevision<OpT>,
 ): {
-  newSynchronizationState: SynchronizationState;
-  operationToSendToServer: OperationAndRevision | undefined;
-  transformedReceivedOperationToApply: Operation | undefined;
-  newClientLogEntry: ClientLogEntry;
+  newSynchronizationState: SynchronizationState<OpT>;
+  operationToSendToServer: OperationAndRevision<OpT> | undefined;
+  transformedReceivedOperationToApply: Operation<OpT> | undefined;
+  newClientLogEntry: ClientLogEntry<OpT>;
 } {
   switch (synchronizationState.status) {
     case SynchronizationStateStatus.SYNCHRONIZED: {
-      const newSynchronizationState: SynchronizationState = {
+      const newSynchronizationState: SynchronizationState<OpT> = {
         status: SynchronizationStateStatus.SYNCHRONIZED,
         serverRevision: synchronizationState.serverRevision + 1,
       };
@@ -215,7 +244,7 @@ function processOperationFromServer(
     case SynchronizationStateStatus.AWAITING_OPERATION: {
       const { awaitedOperation } = synchronizationState;
       if (receivedOperation.meta.id === awaitedOperation.meta.id) {
-        const newSynchronizationState: SynchronizationState = {
+        const newSynchronizationState: SynchronizationState<OpT> = {
           status: SynchronizationStateStatus.SYNCHRONIZED,
           serverRevision: awaitedOperation.revision + 1,
         };
@@ -230,10 +259,11 @@ function processOperationFromServer(
         };
       } else {
         const [transformedReceivedOperation, transformedAwaitedOperation] = transformOperation(
+          transformationFunction,
           receivedOperation,
           awaitedOperation,
         );
-        const newSynchronizationState: SynchronizationState = {
+        const newSynchronizationState: SynchronizationState<OpT> = {
           status: SynchronizationStateStatus.AWAITING_OPERATION,
           awaitedOperation: transformedAwaitedOperation,
         };
@@ -254,7 +284,7 @@ function processOperationFromServer(
     case SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER: {
       const { awaitedOperation, buffer } = synchronizationState;
       if (receivedOperation.meta.id === awaitedOperation.meta.id) {
-        const newSynchronizationState: SynchronizationState = {
+        const newSynchronizationState: SynchronizationState<OpT> = {
           status: SynchronizationStateStatus.AWAITING_OPERATION,
           awaitedOperation: synchronizationState.buffer,
         };
@@ -270,14 +300,16 @@ function processOperationFromServer(
         };
       } else {
         const [onceTransformedReceivedOperation, transformedAwaitedOperation] = transformOperation(
+          transformationFunction,
           receivedOperation,
           awaitedOperation,
         );
         const [twiceTransformedReceivedOperation, transformedBuffer] = transformOperation(
+          transformationFunction,
           onceTransformedReceivedOperation,
           buffer,
         );
-        const newSynchronizationState: SynchronizationState = {
+        const newSynchronizationState: SynchronizationState<OpT> = {
           status: SynchronizationStateStatus.AWAITING_OPERATION_WITH_BUFFER,
           awaitedOperation: transformedAwaitedOperation,
           buffer: transformedBuffer,
@@ -302,25 +334,30 @@ function processOperationFromServer(
   }
 }
 
-function clientReceiveOperation(
-  clientState: ClientAndSocketsVisualizationState,
+function clientReceiveOperation<SnapshotT, OpT>(
+  functions: Pick<ApplicationSpecificFunctions<SnapshotT, OpT>, "transform" | "apply">,
+  clientState: ClientAndSocketsVisualizationState<SnapshotT, OpT>,
 ): {
-  newClientState: ClientAndSocketsVisualizationState;
-  transformedReceivedOperationToApply: Operation | undefined;
+  newClientState: ClientAndSocketsVisualizationState<SnapshotT, OpT>;
+  transformedReceivedOperationToApply: Operation<OpT> | undefined;
 } {
-  const { initialSynchronizationState, clientLog, fromServer, toServer, text } = clientState;
+  const { initialSynchronizationState, clientLog, fromServer, toServer, snapshot } = clientState;
   const [operation, ...remainingOperations] = fromServer;
   const {
     newSynchronizationState,
     operationToSendToServer,
     transformedReceivedOperationToApply,
     newClientLogEntry,
-  } = processOperationFromServer(getLatestSynchronizationState(clientState), operation);
-  const newClientState: ClientAndSocketsVisualizationState = {
-    text:
+  } = processOperationFromServer(
+    functions.transform,
+    getLatestSynchronizationState(clientState),
+    operation,
+  );
+  const newClientState: ClientAndSocketsVisualizationState<SnapshotT, OpT> = {
+    snapshot:
       transformedReceivedOperationToApply === undefined
-        ? text
-        : transformedReceivedOperationToApply.textOperation.apply(text),
+        ? snapshot
+        : functions.apply(transformedReceivedOperationToApply.base, snapshot),
     toServer:
       operationToSendToServer === undefined ? toServer : [...toServer, operationToSendToServer],
     fromServer: remainingOperations,
@@ -330,14 +367,19 @@ function clientReceiveOperation(
   return { newClientState, transformedReceivedOperationToApply };
 }
 
-export function onClientReceive(
-  visualizationState: VisualizationState,
-  clientLens: Lens<VisualizationState, ClientAndSocketsVisualizationState>,
+export function onClientReceive<SnapshotT, OpT>(
+  functions: Pick<ApplicationSpecificFunctions<SnapshotT, OpT>, "transform" | "apply">,
+  visualizationState: VisualizationState<SnapshotT, OpT>,
+  clientLens: Lens<
+    VisualizationState<SnapshotT, OpT>,
+    ClientAndSocketsVisualizationState<SnapshotT, OpT>
+  >,
 ): {
-  newState: VisualizationState;
-  transformedReceivedOperationToApply: Operation | undefined;
+  newState: VisualizationState<SnapshotT, OpT>;
+  transformedReceivedOperationToApply: Operation<OpT> | undefined;
 } {
   const { newClientState, transformedReceivedOperationToApply } = clientReceiveOperation(
+    functions,
     clientLens.get(visualizationState),
   );
   const newState = clientLens.set(visualizationState, newClientState);

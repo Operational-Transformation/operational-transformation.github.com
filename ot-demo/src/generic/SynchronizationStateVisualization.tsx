@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from "react";
 import { SynchronizationState, SynchronizationStateStatus } from "./types/visualizationState";
-import { OperationVisualization } from "./OperationVisualization";
 import { createUseStyles } from "react-jss";
+import { OperationVisualizationComp } from "./OperationVisualization";
 
 const useStyles = createUseStyles({
   synchronizationState: {
@@ -18,9 +18,13 @@ const useStyles = createUseStyles({
   },
 });
 
-export const SynchronizationStateVisualization: FunctionComponent<{
-  synchronizationState: SynchronizationState;
-}> = ({ synchronizationState }) => {
+type SynchronizationStateVisualization<OpT> = FunctionComponent<{
+  synchronizationState: SynchronizationState<OpT>;
+}>;
+
+export const makeSynchronizationStateVisualization = <OpT extends unknown>(
+  OperationVisualization: OperationVisualizationComp<OpT>,
+): SynchronizationStateVisualization<OpT> => ({ synchronizationState }) => {
   const clientClasses = useStyles();
 
   const stateLabel = <span className={clientClasses.stateLabel}>State:</span>;

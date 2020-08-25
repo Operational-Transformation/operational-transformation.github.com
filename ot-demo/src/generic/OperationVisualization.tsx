@@ -2,42 +2,26 @@ import React, { FunctionComponent, useCallback, useEffect, useState } from "reac
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import Tooltip from "@material-ui/core/Tooltip";
-import { TextOperation } from "ot";
-import { getClientColor, replaceInvisibleCharacters } from "./sharedStyles";
-import { Operation } from "./types/operation";
+import { getClientColor } from "./sharedStyles";
+import { Operation, OperationWithoutPayload } from "./types/operation";
 import { useOperationHoverState } from "./OperationHoverProvider";
+import { ApplicationSpecificOperationComponents } from "./types/applicationSpecific";
 
-const renderOp = (op: string | number) => {
-  if (typeof op === "string") {
-    return (
-      <span style={{ color: "#01FF70" }}>
-        insert("{replaceInvisibleCharacters(op).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}")
-      </span>
-    );
-  } else if (op < 0) {
-    return <span style={{ color: "#FF4136" }}>delete({-op})</span>;
-  } else {
-    return <span>retain({op})</span>;
-  }
-};
-
-const renderTextOperation = (textOperation: TextOperation) =>
-  textOperation.ops.flatMap((op, i) => {
-    return [...(i > 0 ? [", "] : []), renderOp(op)];
-  });
-
-interface OperationWithOptionalRevision extends Operation {
+interface OperationWithOptionalRevision<OpT> extends Operation<OpT> {
   revision?: number;
 }
 
-const renderOperation = (operation: OperationWithOptionalRevision): JSX.Element => (
+const renderOperation = <OpT extends unknown>(
+  renderOperation: (operation: OpT) => React.ReactNode,
+  operation: OperationWithOptionalRevision<OpT>,
+): JSX.Element => (
   <>
     {operation.revision !== undefined ? (
       <p style={{ textAlign: "center", fontWeight: "bold" }}>Revision: {operation.revision}</p>
     ) : (
       <></>
     )}
-    <p>{renderTextOperation(operation.textOperation)}</p>
+    <p>{renderOperation(operation.base)}</p>
   </>
 );
 
@@ -58,9 +42,9 @@ const useOperationStyles = createUseStyles({
 
 export type OperationTooltipPlacement = "top" | "bottom" | "left" | "right";
 
-interface OperationProps
+interface OperationProps<OpT>
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, "onMouseEnter" | "onMouseLeave"> {
-  operation: OperationWithOptionalRevision;
+  operation: OperationWithOptionalRevision<OpT>;
   tooltipPlacement?: OperationTooltipPlacement;
 }
 
@@ -74,7 +58,8 @@ const isOneArrayPrefixOfTheOther = (xs: string[], ys: string[]) => {
   return true;
 };
 
-const isRelated = (a: Operation, b: Operation): boolean => a.meta.id === b.meta.id;
+const isRelated = (a: OperationWithoutPayload, b: OperationWithoutPayload): boolean =>
+  a.meta.id === b.meta.id;
 
 const transformationPlural = (count: number): string => {
   switch (count) {
@@ -101,9 +86,9 @@ const transformationPlural = (count: number): string => {
   }
 };
 
-const renderRelatedOperation = (
-  operation: Operation,
-  relatedOperation: Operation,
+const renderRelatedOperation = <OpT extends unknown>(
+  operation: Operation<OpT>,
+  relatedOperation: OperationWithoutPayload,
 ): NonNullable<React.ReactNode> => {
   if (
     isOneArrayPrefixOfTheOther(operation.transformedAgainst, relatedOperation.transformedAgainst)
@@ -127,7 +112,11 @@ enum SelfOpenStatus {
   Open = "OPEN",
 }
 
-export const OperationVisualization: FunctionComponent<OperationProps> = (props) => {
+export type OperationVisualizationComp<OpT> = FunctionComponent<OperationProps<OpT>>;
+
+export const makeOperationVisualization = <OpT extends unknown>(
+  applicationSpecific: ApplicationSpecificOperationComponents<OpT>,
+): OperationVisualizationComp<OpT> => (props) => {
   const classes = useOperationStyles();
   const { className, style, operation, tooltipPlacement, ...otherProps } = props;
 
@@ -149,7 +138,7 @@ export const OperationVisualization: FunctionComponent<OperationProps> = (props)
 
   const onOpen = useCallback(() => {
     setSelfOpenStatus(SelfOpenStatus.Open);
-    setTooltipContent(renderOperation(operation));
+    setTooltipContent(renderOperation(applicationSpecific.renderOperation, operation));
     setHoveredOperation(operation);
   }, [operation, setHoveredOperation]);
 
