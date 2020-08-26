@@ -21,7 +21,7 @@ const renderOperation = <OpT extends unknown>(
     ) : (
       <></>
     )}
-    <p>{renderOperation(operation.base)}</p>
+    <div>{renderOperation(operation.base)}</div>
   </>
 );
 

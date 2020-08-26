@@ -2,11 +2,11 @@ import React from "react";
 import { makeVisualization } from "./generic/Visualization";
 import { createUseStyles } from "react-jss";
 import { OperationHoverProvider } from "./generic/OperationHoverProvider";
+import { initialText } from "./applicationSpecific/plainTextShared";
 import {
-  initialText,
-  plainTextWithScanningOperationsComponents,
-  plainTextWithScanningOperationsFunctions,
-} from "./applicationSpecific/plainTextWithScanningOperations";
+  plainTextWithBasicOperationsComponents,
+  plainTextWithBasicOperationsFunctions,
+} from "./applicationSpecific/plainTextWithBasicOperations";
 
 const useStyles = createUseStyles({
   wrapper: {
@@ -19,9 +19,14 @@ const useStyles = createUseStyles({
   },
 });
 
+// const Visualization = makeVisualization(
+//   plainTextWithScanningOperationsFunctions,
+//   plainTextWithScanningOperationsComponents,
+// );
+
 const Visualization = makeVisualization(
-  plainTextWithScanningOperationsFunctions,
-  plainTextWithScanningOperationsComponents,
+  plainTextWithBasicOperationsFunctions,
+  plainTextWithBasicOperationsComponents,
 );
 
 function App() {

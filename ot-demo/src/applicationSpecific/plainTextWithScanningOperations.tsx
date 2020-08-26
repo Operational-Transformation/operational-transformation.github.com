@@ -1,31 +1,15 @@
 import {
   ApplicationSpecificComponents,
   ApplicationSpecificFunctions,
-  EditorHandle,
-  EditorProps,
 } from "../generic/types/applicationSpecific";
 import { TextOperation } from "ot";
-import React, {
-  forwardRef,
-  ForwardRefExoticComponent,
-  PropsWithoutRef,
-  RefAttributes,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import { createUseStyles } from "react-jss";
-import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
-import "cm-show-invisibles";
-import "codemirror/lib/codemirror.css";
-import "codemirror/theme/material.css";
+import React from "react";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
-import { UnControlled as CodeMirror } from "react-codemirror2";
-
-const replaceInvisibleCharacters = (str: string): string =>
-  str.replace(/\n/g, "¬").replace(/ /g, "·");
+import {
+  makeCodeMirrorComponent,
+  renderSnapshot,
+  replaceInvisibleCharacters,
+} from "./plainTextShared";
 
 const renderOp = (op: string | number) => {
   if (typeof op === "string") {
@@ -41,76 +25,11 @@ const renderOp = (op: string | number) => {
   }
 };
 
-declare module "codemirror" {
-  interface EditorConfiguration {
-    showInvisibles: true; // provided by addon 'cm-show-invisibles'
-  }
-}
-
-const editorConfiguration: EditorConfiguration = {
-  lineNumbers: true,
-  showInvisibles: true,
-};
-
-const useCodeMirrorStyles = createUseStyles({
-  codeMirrorContainer: {
-    border: "1px solid #ccc",
-    flex: "1",
-    "& .CodeMirror": {
-      height: "150px",
-    },
-  },
-});
-
-const CodeMirrorComponent: ForwardRefExoticComponent<
-  PropsWithoutRef<EditorProps<string, TextOperation>> & RefAttributes<EditorHandle<TextOperation>>
-> = forwardRef<EditorHandle<TextOperation>, EditorProps<string, TextOperation>>(
-  ({ snapshot, onUserChange }, ref) => {
-    const codeMirrorClasses = useCodeMirrorStyles();
-
-    const [initialText] = useState(() => snapshot);
-
-    const [editor, setEditor] = useState<Editor | undefined>(undefined);
-
-    const applyingOperationFromServerRef = useRef<boolean>(false);
-
-    const onChanges = useCallback(
-      (editor: Editor, changes: EditorChangeLinkedList[]) => {
-        if (!applyingOperationFromServerRef.current) {
-          const [operation] = CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, editor);
-          onUserChange(operation);
-        }
-      },
-      [onUserChange, applyingOperationFromServerRef],
-    );
-
-    useEffect(() => {
-      if (editor !== undefined) {
-        editor.on("changes", onChanges);
-        return () => {
-          editor.off("changes", onChanges);
-        };
-      }
-    }, [editor, onChanges]);
-
-    useImperativeHandle(ref, () => ({
-      applyOperation(textOperation) {
-        if (editor !== undefined) {
-          applyingOperationFromServerRef.current = true;
-          CodeMirrorAdapter.applyOperationToCodeMirror(textOperation, editor);
-          applyingOperationFromServerRef.current = false;
-        }
-      },
-    }));
-
-    return (
-      <CodeMirror
-        className={codeMirrorClasses.codeMirrorContainer}
-        options={editorConfiguration}
-        value={initialText}
-        editorDidMount={setEditor}
-      />
-    );
+const CodeMirrorComponent = makeCodeMirrorComponent<TextOperation>(
+  CodeMirrorAdapter.applyOperationToCodeMirror,
+  (changes, editor) => {
+    const [operation] = CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, editor);
+    return operation;
   },
 );
 
@@ -123,19 +42,7 @@ export const plainTextWithScanningOperationsComponents: ApplicationSpecificCompo
       return [...(i > 0 ? [", "] : []), renderOp(op)];
     });
   },
-  renderSnapshot(snapshot: string): React.ReactNode {
-    return (
-      <span
-        style={{
-          whiteSpace: "pre",
-          backgroundColor: "white",
-          fontFamily: "monospace",
-        }}
-      >
-        {replaceInvisibleCharacters(snapshot)}
-      </span>
-    );
-  },
+  renderSnapshot,
   EditorComponent: CodeMirrorComponent,
 };
 
@@ -153,5 +60,3 @@ export const plainTextWithScanningOperationsFunctions: ApplicationSpecificFuncti
     return operation.apply(snapshot);
   },
 };
-
-export const initialText = "Lorem ipsum";
