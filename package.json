@@ -30,8 +30,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "prettier": "prettier --write --config .prettierrc.yaml '**/{*,.[^.],.??*}.{ts,tsx,css,js,json}'",
-    "check": "depcruise --config .dependency-cruiser.js src"
+    "prettier": "prettier --write --config .prettierrc.yaml '{src/**/*,public/**/*,*,.[^.],.??*}.{ts,tsx,css,js,json}'",
+    "prettier-check": "prettier --check --config .prettierrc.yaml '{src/**/*,public/**/*,*,.[^.],.??*}.{ts,tsx,css,js,json}'",
+    "depcruise-check": "depcruise --config .dependency-cruiser.js src"
   },
   "eslintConfig": {
     "extends": "react-app"

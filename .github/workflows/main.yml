@@ -20,6 +20,10 @@ jobs:
           node-version: 12.x
       - name: Install NPM dependencies
         run: npm ci
+      - name: Check formatting using Prettier
+        run: npm run prettier-check
+      - name: Check Dependency Cruiser rules
+        run: npm run depcruise-check
       - name: Build
         run: npm run build
       - name: Deploy
