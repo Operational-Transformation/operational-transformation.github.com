@@ -11,17 +11,21 @@ import {
   replaceInvisibleCharacters,
 } from "./plainTextShared";
 
-const renderOp = (op: string | number) => {
+const renderOp = (op: string | number, key: string | number) => {
   if (typeof op === "string") {
     return (
-      <span style={{ color: "#01FF70" }}>
+      <span key={key} style={{ color: "#01FF70" }}>
         insert("{replaceInvisibleCharacters(op).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}")
       </span>
     );
   } else if (op < 0) {
-    return <span style={{ color: "#FF4136" }}>delete({-op})</span>;
+    return (
+      <span key={key} style={{ color: "#FF4136" }}>
+        delete({-op})
+      </span>
+    );
   } else {
-    return <span>retain({op})</span>;
+    return <span key={key}>retain({op})</span>;
   }
 };
 
@@ -39,7 +43,7 @@ export const plainTextWithScanningOperationsComponents: ApplicationSpecificCompo
 > = {
   renderOperation(operation: TextOperation): React.ReactNode {
     return operation.ops.flatMap((op, i) => {
-      return [...(i > 0 ? [", "] : []), renderOp(op)];
+      return [...(i > 0 ? [", "] : []), renderOp(op, i)];
     });
   },
   renderSnapshot,

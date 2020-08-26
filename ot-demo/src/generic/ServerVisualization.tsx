@@ -46,23 +46,25 @@ export const makeServerVisualization = <SnapshotT extends unknown, OpT extends u
           Central Server
         </h2>
         <table className={classes.stateTable}>
-          <tr>
-            <th>Document:</th>
-            <td>{applicationSpecificComponents.renderSnapshot(state.snapshot)}</td>
-          </tr>
-          <tr>
-            <th>Operations:</th>
-            <td>
-              {state.operations.length === 0 ? <>none yet</> : <></>}
-              {state.operations.map((operation) => (
-                <OperationVisualization
-                  key={operation.meta.id}
-                  operation={operation}
-                  className={classes.operationInLog}
-                />
-              ))}
-            </td>
-          </tr>
+          <tbody>
+            <tr>
+              <th>Document:</th>
+              <td>{applicationSpecificComponents.renderSnapshot(state.snapshot)}</td>
+            </tr>
+            <tr>
+              <th>Operations:</th>
+              <td>
+                {state.operations.length === 0 ? <>none yet</> : <></>}
+                {state.operations.map((operation) => (
+                  <OperationVisualization
+                    key={operation.meta.id}
+                    operation={operation}
+                    className={classes.operationInLog}
+                  />
+                ))}
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
     );
