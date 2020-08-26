@@ -1,0 +1,30 @@
+name: Build and deploy on GitHub Pages
+
+on:
+  push:
+    branches:
+      - source
+  schedule:
+    - cron: '0 3 1 * *' # monthly
+
+jobs:
+  build:
+    name: Build and deploy on GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+      - name: Install NPM dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: build
