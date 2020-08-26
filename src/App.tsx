@@ -16,6 +16,11 @@ const useStyles = createUseStyles({
   header: {
     margin: "0 0 40px",
     textAlign: "center",
+    "& abbr": {
+      textDecorationStyle: "dotted",
+      textDecorationColor: "#aaa",
+      textDecorationThickness: "2px",
+    },
   },
 });
 
@@ -35,7 +40,9 @@ function App() {
   return (
     <OperationHoverProvider>
       <div className={classes.wrapper}>
-        <h1 className={classes.header}>Visualization of OT with a central server</h1>
+        <h1 className={classes.header}>
+          Visualization of <abbr title="Operational Transformation">OT</abbr> with a central server
+        </h1>
         <Visualization initialSnapshot={initialText} />
       </div>
     </OperationHoverProvider>
