@@ -51,6 +51,6 @@
   },
   "devDependencies": {
     "dependency-cruiser": "^9.11.1",
-    "prettier": "2.1.1"
+    "prettier": "^2.2.1"
   }
 }

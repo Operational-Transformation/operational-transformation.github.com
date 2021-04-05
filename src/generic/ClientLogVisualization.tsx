@@ -52,9 +52,9 @@ const makeClientLogItemVisualization = <OpT extends unknown>(
   );
   const ArrowDiagram = makeArrowDiagram(OperationVisualization);
 
-  const UserEditImmediatelySentToServerVisualization: FunctionComponent<UserEditImmediatelySentToServer<
-    OpT
-  >> = (logEntry) => {
+  const UserEditImmediatelySentToServerVisualization: FunctionComponent<
+    UserEditImmediatelySentToServer<OpT>
+  > = (logEntry) => {
     const classes = useStyles();
 
     return (
@@ -110,9 +110,9 @@ const makeClientLogItemVisualization = <OpT extends unknown>(
     );
   };
 
-  const ReceivedOwnOperationAndSentBufferVisualization: FunctionComponent<ReceivedOwnOperationAndSentBuffer<
-    OpT
-  >> = (logEntry) => {
+  const ReceivedOwnOperationAndSentBufferVisualization: FunctionComponent<
+    ReceivedOwnOperationAndSentBuffer<OpT>
+  > = (logEntry) => {
     const classes = useStyles();
 
     return (
@@ -132,9 +132,9 @@ const makeClientLogItemVisualization = <OpT extends unknown>(
     );
   };
 
-  const ReceivedServerOperationWhileSynchronizedVisualization: FunctionComponent<ReceivedServerOperationWhileSynchronized<
-    OpT
-  >> = (logEntry) => {
+  const ReceivedServerOperationWhileSynchronizedVisualization: FunctionComponent<
+    ReceivedServerOperationWhileSynchronized<OpT>
+  > = (logEntry) => {
     const classes = useStyles();
 
     return (
@@ -149,9 +149,9 @@ const makeClientLogItemVisualization = <OpT extends unknown>(
     );
   };
 
-  const ReceivedServerOperationWhileAwaitingOperationVisualization: FunctionComponent<ReceivedServerOperationWhileAwaitingOperation<
-    OpT
-  >> = (logEntry) => {
+  const ReceivedServerOperationWhileAwaitingOperationVisualization: FunctionComponent<
+    ReceivedServerOperationWhileAwaitingOperation<OpT>
+  > = (logEntry) => {
     const {
       receivedOperation,
       transformedReceivedOperation,
@@ -222,9 +222,9 @@ const makeClientLogItemVisualization = <OpT extends unknown>(
     );
   };
 
-  const ReceivedServerOperationWhileAwaitingOperationWithBufferVisualization: FunctionComponent<ReceivedServerOperationWhileAwaitingOperationWithBuffer<
-    OpT
-  >> = (logEntry) => {
+  const ReceivedServerOperationWhileAwaitingOperationWithBufferVisualization: FunctionComponent<
+    ReceivedServerOperationWhileAwaitingOperationWithBuffer<OpT>
+  > = (logEntry) => {
     const {
       receivedOperation,
       onceTransformedReceivedOperation,
