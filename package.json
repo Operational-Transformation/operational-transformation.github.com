@@ -22,7 +22,7 @@
     "react-codemirror2": "git+https://github.com/ihollander/react-codemirror2.git#64597ae3267aebdff6af867d5105e44f739e09f2",
     "react-dom": "17.0.2",
     "react-jss": "10.6.0",
-    "react-scripts": "3.4.4",
+    "react-scripts": "4.0.3",
     "typescript": "3.9.9"
   },
   "scripts": {
