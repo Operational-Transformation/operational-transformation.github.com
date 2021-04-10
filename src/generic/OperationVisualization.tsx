@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useCallback, useEffect, useState } from "react";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
-import Tooltip from "@material-ui/core/Tooltip";
+import { Tooltip } from "@material-ui/core";
 import { getClientColor } from "./sharedStyles";
 import type { Operation, OperationWithoutPayload } from "./types/operation";
 import { useOperationHoverState } from "./OperationHoverProvider";
