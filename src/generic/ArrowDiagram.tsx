@@ -1,3 +1,5 @@
+// @ts-ignore
+import React from "react";
 import type { CSSProperties, FunctionComponent } from "react";
 import type { Operation } from "./types/operation";
 import { getClientColor } from "./sharedStyles";

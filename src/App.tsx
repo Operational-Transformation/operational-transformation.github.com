@@ -1,3 +1,5 @@
+// @ts-ignore
+import React from "react";
 import { makeVisualization } from "./generic/Visualization";
 import { createUseStyles } from "react-jss";
 import { OperationHoverProvider } from "./generic/OperationHoverProvider";

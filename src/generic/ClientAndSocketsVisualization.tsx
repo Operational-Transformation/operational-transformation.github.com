@@ -1,10 +1,12 @@
 import type { ClientAndSocketsVisualizationState, Queue } from "./types/visualizationState";
+// @ts-ignore
+import React from "react";
 import { createUseStyles } from "react-jss";
 import { CSSProperties, FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { getClientColor, useSharedStyles } from "./sharedStyles";
 import IconButton from "@material-ui/core/IconButton";
-import Tooltip from "@material-ui/core/Tooltip";
+import { Tooltip } from "@material-ui/core";
 import ArrowUpward from "@material-ui/icons/ArrowUpward";
 import ArrowDownward from "@material-ui/icons/ArrowDownward";
 import Computer from "@material-ui/icons/Computer";

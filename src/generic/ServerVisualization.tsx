@@ -1,3 +1,5 @@
+// @ts-ignore
+import React from "react";
 import type { FunctionComponent } from "react";
 import { useSharedStyles } from "./sharedStyles";
 import clsx from "clsx";

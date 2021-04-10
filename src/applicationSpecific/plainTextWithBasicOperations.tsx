@@ -10,6 +10,8 @@ import {
 } from "./plainTextShared";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
 import type { Editor } from "codemirror";
+// @ts-ignore
+import React from "react";
 
 enum BasicTextOperationType {
   Insert = "INSERT",

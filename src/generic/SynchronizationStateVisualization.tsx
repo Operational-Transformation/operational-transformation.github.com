@@ -1,3 +1,5 @@
+// @ts-ignore
+import React from "react";
 import type { FunctionComponent } from "react";
 import { SynchronizationState, SynchronizationStateStatus } from "./types/visualizationState";
 import { createUseStyles } from "react-jss";
