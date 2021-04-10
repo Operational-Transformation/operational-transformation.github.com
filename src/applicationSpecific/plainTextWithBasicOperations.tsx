@@ -1,4 +1,4 @@
-import {
+import type {
   ApplicationSpecificComponents,
   ApplicationSpecificFunctions,
 } from "../generic/types/applicationSpecific";
@@ -9,8 +9,7 @@ import {
   replaceInvisibleCharacters,
 } from "./plainTextShared";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
-import { Editor } from "codemirror";
-import React from "react";
+import type { Editor } from "codemirror";
 
 enum BasicTextOperationType {
   Insert = "INSERT",

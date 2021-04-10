@@ -1,5 +1,5 @@
-import { Operation, OperationAndRevision } from "./operation";
-import { ClientLogEntry } from "./clientLog";
+import type { Operation, OperationAndRevision } from "./operation";
+import type { ClientLogEntry } from "./clientLog";
 
 export type Queue<A> = A[];
 

@@ -1,4 +1,4 @@
-import React, {
+import {
   forwardRef,
   ForwardRefExoticComponent,
   PropsWithoutRef,
@@ -9,8 +9,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { EditorHandle, EditorProps } from "../generic/types/applicationSpecific";
-import { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
+import type { EditorHandle, EditorProps } from "../generic/types/applicationSpecific";
+import type { Editor, EditorChangeLinkedList, EditorConfiguration } from "codemirror";
 import { UnControlled as CodeMirror } from "react-codemirror2";
 import { createUseStyles } from "react-jss";
 

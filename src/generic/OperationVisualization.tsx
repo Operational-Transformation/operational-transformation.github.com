@@ -1,11 +1,11 @@
-import React, { FunctionComponent, useCallback, useEffect, useState } from "react";
+import { FunctionComponent, useCallback, useEffect, useState } from "react";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import Tooltip from "@material-ui/core/Tooltip";
 import { getClientColor } from "./sharedStyles";
-import { Operation, OperationWithoutPayload } from "./types/operation";
+import type { Operation, OperationWithoutPayload } from "./types/operation";
 import { useOperationHoverState } from "./OperationHoverProvider";
-import { ApplicationSpecificOperationComponents } from "./types/applicationSpecific";
+import type { ApplicationSpecificOperationComponents } from "./types/applicationSpecific";
 
 interface OperationWithOptionalRevision<OpT> extends Operation<OpT> {
   revision?: number;

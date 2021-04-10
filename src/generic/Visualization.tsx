@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react";
+import { FunctionComponent, useState } from "react";
 import { createUseStyles } from "react-jss";
 import {
   Lens,
@@ -19,7 +19,7 @@ import {
   VisualizationState,
 } from "./types/visualizationState";
 import { ClientName, Operation } from "./types/operation";
-import {
+import type {
   ApplicationSpecificComponents,
   ApplicationSpecificFunctions,
 } from "./types/applicationSpecific";

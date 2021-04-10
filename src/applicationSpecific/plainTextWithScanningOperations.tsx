@@ -1,9 +1,8 @@
-import {
+import type {
   ApplicationSpecificComponents,
   ApplicationSpecificFunctions,
 } from "../generic/types/applicationSpecific";
 import { TextOperation } from "ot";
-import React from "react";
 import { CodeMirrorAdapter } from "./codemirror-adapter";
 import {
   makeCodeMirrorComponent,

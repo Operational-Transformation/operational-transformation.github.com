@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useState } from "react";
+import { FunctionComponent, useCallback, useState } from "react";
 import {
   ClientEntryType,
   ClientLogEntry,
@@ -13,9 +13,9 @@ import {
 } from "./types/clientLog";
 import { createUseStyles } from "react-jss";
 import { ArrowDiagramArrowProps, makeArrowDiagram, SvgArrow } from "./ArrowDiagram";
-import { ClientLog, ClientLogItem, SynchronizationState } from "./types/visualizationState";
+import type { ClientLog, ClientLogItem, SynchronizationState } from "./types/visualizationState";
 import { makeSynchronizationStateVisualization } from "./SynchronizationStateVisualization";
-import { ApplicationSpecificOperationComponents } from "./types/applicationSpecific";
+import type { ApplicationSpecificOperationComponents } from "./types/applicationSpecific";
 import { makeOperationVisualization } from "./OperationVisualization";
 
 const useStyles = createUseStyles({

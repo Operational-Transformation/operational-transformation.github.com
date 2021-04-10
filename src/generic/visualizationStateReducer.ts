@@ -14,7 +14,7 @@ import {
   VisualizationState,
 } from "./types/visualizationState";
 import { ClientEntryType, ClientLogEntry } from "./types/clientLog";
-import {
+import type {
   ApplicationSpecificFunctions,
   CompositionFunction,
   TransformationFunction,

@@ -1,4 +1,4 @@
-import React, { ForwardRefExoticComponent, PropsWithoutRef, RefAttributes } from "react";
+import type { ForwardRefExoticComponent, PropsWithoutRef, RefAttributes } from "react";
 
 export interface TransformationFunction<OpT> {
   (a: OpT, b: OpT): [OpT, OpT];

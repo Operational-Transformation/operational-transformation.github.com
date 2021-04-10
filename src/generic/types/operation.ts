@@ -1,5 +1,5 @@
 import { generateUuid } from "../util/uuid";
-import { CompositionFunction, TransformationFunction } from "./applicationSpecific";
+import type { CompositionFunction, TransformationFunction } from "./applicationSpecific";
 
 type OperationId = string; // persistent, not changed by transformation
 

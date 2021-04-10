@@ -1,5 +1,5 @@
 import { TextOperation } from "ot";
-import { Doc, Position, Editor, EditorChangeLinkedList } from "codemirror";
+import type { Doc, Position, Editor, EditorChangeLinkedList } from "codemirror";
 
 function cmpPos(a: Position, b: Position) {
   if (a.line < b.line) {

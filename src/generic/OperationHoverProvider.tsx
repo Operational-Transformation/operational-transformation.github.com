@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   Dispatch,
   FunctionComponent,
@@ -6,7 +6,7 @@ import React, {
   useContext,
   useState,
 } from "react";
-import { OperationWithoutPayload } from "./types/operation";
+import type { OperationWithoutPayload } from "./types/operation";
 
 type StateHandle<S> = [S, Dispatch<SetStateAction<S>>];
 

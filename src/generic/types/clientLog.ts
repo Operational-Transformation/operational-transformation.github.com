@@ -1,4 +1,4 @@
-import { Operation, OperationAndRevision } from "./operation";
+import type { Operation, OperationAndRevision } from "./operation";
 
 export enum ClientEntryType {
   USER_EDIT_IMMEDIATELY_SENT_TO_SERVER = "USER_EDIT_IMMEDIATELY_SENT_TO_SERVER",

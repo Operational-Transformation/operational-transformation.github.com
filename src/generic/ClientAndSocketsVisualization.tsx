@@ -1,13 +1,6 @@
-import { ClientAndSocketsVisualizationState, Queue } from "./types/visualizationState";
+import type { ClientAndSocketsVisualizationState, Queue } from "./types/visualizationState";
 import { createUseStyles } from "react-jss";
-import React, {
-  CSSProperties,
-  FunctionComponent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { CSSProperties, FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { getClientColor, useSharedStyles } from "./sharedStyles";
 import IconButton from "@material-ui/core/IconButton";
@@ -19,7 +12,7 @@ import Tablet from "@material-ui/icons/Tablet";
 import { ClientName, Operation, OperationAndRevision } from "./types/operation";
 import { useIsInitialRender } from "./hooks/useIsInitialRender";
 import { makeClientLogVisualization } from "./ClientLogVisualization";
-import { ApplicationSpecificComponents, EditorHandle } from "./types/applicationSpecific";
+import type { ApplicationSpecificComponents, EditorHandle } from "./types/applicationSpecific";
 import { makeOperationVisualization, OperationVisualizationComp } from "./OperationVisualization";
 
 const useSocketOperationStyles = createUseStyles({

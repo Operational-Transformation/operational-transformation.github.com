@@ -1,7 +1,7 @@
-import React, { FunctionComponent } from "react";
+import type { FunctionComponent } from "react";
 import { SynchronizationState, SynchronizationStateStatus } from "./types/visualizationState";
 import { createUseStyles } from "react-jss";
-import { OperationVisualizationComp } from "./OperationVisualization";
+import type { OperationVisualizationComp } from "./OperationVisualization";
 
 const useStyles = createUseStyles({
   synchronizationState: {

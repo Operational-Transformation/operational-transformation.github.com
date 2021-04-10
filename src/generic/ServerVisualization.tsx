@@ -1,10 +1,10 @@
-import React, { FunctionComponent } from "react";
+import type { FunctionComponent } from "react";
 import { useSharedStyles } from "./sharedStyles";
 import clsx from "clsx";
 import StorageIcon from "@material-ui/icons/Storage";
 import { createUseStyles } from "react-jss";
-import { ServerVisualizationState } from "./types/visualizationState";
-import { ApplicationSpecificComponents } from "./types/applicationSpecific";
+import type { ServerVisualizationState } from "./types/visualizationState";
+import type { ApplicationSpecificComponents } from "./types/applicationSpecific";
 import { makeOperationVisualization } from "./OperationVisualization";
 
 export const useServerStyles = createUseStyles({

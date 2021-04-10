@@ -1,7 +1,10 @@
-import React, { CSSProperties, FunctionComponent } from "react";
-import { Operation } from "./types/operation";
+import type { CSSProperties, FunctionComponent } from "react";
+import type { Operation } from "./types/operation";
 import { getClientColor } from "./sharedStyles";
-import { OperationTooltipPlacement, OperationVisualizationComp } from "./OperationVisualization";
+import type {
+  OperationTooltipPlacement,
+  OperationVisualizationComp,
+} from "./OperationVisualization";
 
 interface Point {
   x: number;
