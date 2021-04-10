@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@snowpack/plugin-react-refresh": "^2.4.2",
+    "@snowpack/plugin-webpack": "^2.3.1",
     "@types/snowpack-env": "^2.3.3",
     "dependency-cruiser": "9.25.0",
     "prettier": "2.2.1"

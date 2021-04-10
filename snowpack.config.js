@@ -4,7 +4,16 @@ module.exports = {
     public: { url: "/", static: true },
     src: { url: "/dist" },
   },
-  plugins: ["@snowpack/plugin-typescript", "@snowpack/plugin-react-refresh"],
+  plugins: [
+    "@snowpack/plugin-typescript",
+    "@snowpack/plugin-react-refresh",
+    [
+      "@snowpack/plugin-webpack",
+      {
+        sourceMap: true,
+      },
+    ],
+  ],
   routes: [],
   optimize: {
     bundle: true,
