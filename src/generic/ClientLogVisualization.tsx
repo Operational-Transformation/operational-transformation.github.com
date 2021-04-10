@@ -347,9 +347,11 @@ const makeClientLogItemVisualization = <OpT extends unknown>(
 
     const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined);
 
-    const setInnerDiv = useCallback((innerDiv: HTMLDivElement) => {
-      const rect = innerDiv.getBoundingClientRect();
-      setMeasuredHeight(rect.height);
+    const setInnerDiv = useCallback((innerDiv: HTMLDivElement | null) => {
+      if (innerDiv !== null) {
+        const rect = innerDiv.getBoundingClientRect();
+        setMeasuredHeight(rect.height);
+      }
     }, []);
 
     return (

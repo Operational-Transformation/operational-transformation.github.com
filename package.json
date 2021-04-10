@@ -30,6 +30,8 @@
     "depcruise-check": "depcruise --config .dependency-cruiser.js src"
   },
   "devDependencies": {
+    "@snowpack/plugin-react-refresh": "^2.4.2",
+    "@types/snowpack-env": "^2.3.3",
     "dependency-cruiser": "9.25.0",
     "prettier": "2.2.1"
   }
