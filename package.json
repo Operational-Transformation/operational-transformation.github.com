@@ -7,7 +7,7 @@
     "@material-ui/icons": "4.11.2",
     "@snowpack/plugin-typescript": "1.2.1",
     "@types/codemirror": "0.0.108",
-    "@types/node": "14.14.37",
+    "@types/node": "14.14.43",
     "@types/ot": "0.0.4",
     "@types/react": "17.0.4",
     "@types/react-dom": "17.0.3",
