@@ -60,12 +60,6 @@ export const composeOperation = <OpT>(
   first: OperationAndRevision<OpT>,
   second: OpT,
 ): OperationAndRevision<OpT> => {
-  if (first.transformedAgainst.length !== 0) {
-    throw new Error(
-      "you shouldn't compose a transformed operation because composition and transformation are not compatible",
-    );
-  }
-
   return {
     meta: {
       author: first.meta.author,
