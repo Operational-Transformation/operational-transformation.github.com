@@ -47,9 +47,8 @@ const makeClientLogItemVisualization = <OpT extends unknown>(
   applicationSpecific: ApplicationSpecificOperationComponents<OpT>,
 ): FunctionComponent<ClientLogItem<OpT>> => {
   const OperationVisualization = makeOperationVisualization(applicationSpecific);
-  const SynchronizationStateVisualization = makeSynchronizationStateVisualization(
-    OperationVisualization,
-  );
+  const SynchronizationStateVisualization =
+    makeSynchronizationStateVisualization(OperationVisualization);
   const ArrowDiagram = makeArrowDiagram(OperationVisualization);
 
   const UserEditImmediatelySentToServerVisualization: FunctionComponent<
@@ -396,9 +395,8 @@ export const makeClientLogVisualization = <OpT extends unknown>(
   applicationSpecific: ApplicationSpecificOperationComponents<OpT>,
 ): FunctionComponent<ClientLogVisualizationProps<OpT>> => {
   const OperationVisualization = makeOperationVisualization(applicationSpecific);
-  const SynchronizationStateVisualization = makeSynchronizationStateVisualization(
-    OperationVisualization,
-  );
+  const SynchronizationStateVisualization =
+    makeSynchronizationStateVisualization(OperationVisualization);
   const ClientLogItemVisualization = makeClientLogItemVisualization(applicationSpecific);
 
   return ({ clientLog, initialSynchronizationState }) => {

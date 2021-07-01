@@ -66,50 +66,52 @@ interface ArrowDiagramProps<OpT> {
 
 type ArrowDiagram<OpT> = FunctionComponent<ArrowDiagramProps<OpT>>;
 
-export const makeArrowDiagram = <OpT extends unknown>(
-  OperationVisualization: OperationVisualizationComp<OpT>,
-): ArrowDiagram<OpT> => ({ width, height, arrows }) => {
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: `${width}px`,
-        height: `${height}px`,
-        margin: "0 auto",
-      }}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={width}
-        height={height}
-        style={{ position: "absolute", opacity: "0.2" }}
+export const makeArrowDiagram =
+  <OpT extends unknown>(
+    OperationVisualization: OperationVisualizationComp<OpT>,
+  ): ArrowDiagram<OpT> =>
+  ({ width, height, arrows }) => {
+    return (
+      <div
+        style={{
+          position: "relative",
+          width: `${width}px`,
+          height: `${height}px`,
+          margin: "0 auto",
+        }}
       >
-        {arrows.map(({ operation, start, end }, i) => (
-          <SvgArrow
-            key={i}
-            start={interpolate(0.1, start, end)}
-            end={interpolate(0.95, start, end)}
-            color={getClientColor(operation.meta.author)}
-            {...operationArrowStyle}
-          />
-        ))}
-      </svg>
-      {arrows.map(({ operation, start, end, tooltipPlacement }, i) => {
-        const centerPoint = interpolate(0.45, start, end);
-        const style: CSSProperties = {
-          position: "absolute",
-          left: `${centerPoint.x - 10}px`,
-          top: `${centerPoint.y - 10}px`,
-        };
-        return (
-          <OperationVisualization
-            key={i}
-            operation={operation}
-            tooltipPlacement={tooltipPlacement}
-            style={style}
-          />
-        );
-      })}
-    </div>
-  );
-};
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width={width}
+          height={height}
+          style={{ position: "absolute", opacity: "0.2" }}
+        >
+          {arrows.map(({ operation, start, end }, i) => (
+            <SvgArrow
+              key={i}
+              start={interpolate(0.1, start, end)}
+              end={interpolate(0.95, start, end)}
+              color={getClientColor(operation.meta.author)}
+              {...operationArrowStyle}
+            />
+          ))}
+        </svg>
+        {arrows.map(({ operation, start, end, tooltipPlacement }, i) => {
+          const centerPoint = interpolate(0.45, start, end);
+          const style: CSSProperties = {
+            position: "absolute",
+            left: `${centerPoint.x - 10}px`,
+            top: `${centerPoint.y - 10}px`,
+          };
+          return (
+            <OperationVisualization
+              key={i}
+              operation={operation}
+              tooltipPlacement={tooltipPlacement}
+              style={style}
+            />
+          );
+        })}
+      </div>
+    );
+  };

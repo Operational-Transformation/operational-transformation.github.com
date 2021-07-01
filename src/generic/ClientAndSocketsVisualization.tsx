@@ -33,31 +33,33 @@ interface OperationInSocketProps<OpT> {
   onTransitionEnd?: () => void;
 }
 
-const makeOperationInSocket = <OpT extends unknown>(
-  OperationVisualization: OperationVisualizationComp<OpT>,
-): FunctionComponent<OperationInSocketProps<OpT>> => (props) => {
-  const classes = useSocketOperationStyles();
+const makeOperationInSocket =
+  <OpT extends unknown>(
+    OperationVisualization: OperationVisualizationComp<OpT>,
+  ): FunctionComponent<OperationInSocketProps<OpT>> =>
+  (props) => {
+    const classes = useSocketOperationStyles();
 
-  const isInitialRender = useIsInitialRender();
+    const isInitialRender = useIsInitialRender();
 
-  const positionStyle: CSSProperties =
-    isInitialRender && props.initialPositionTop !== undefined
-      ? { top: props.initialPositionTop }
-      : props.positionTop !== undefined
-      ? { top: props.positionTop }
-      : {};
+    const positionStyle: CSSProperties =
+      isInitialRender && props.initialPositionTop !== undefined
+        ? { top: props.initialPositionTop }
+        : props.positionTop !== undefined
+        ? { top: props.positionTop }
+        : {};
 
-  const hoverStyle: CSSProperties = props.disableHover ? { pointerEvents: "none" } : {};
+    const hoverStyle: CSSProperties = props.disableHover ? { pointerEvents: "none" } : {};
 
-  return (
-    <OperationVisualization
-      operation={props.operation}
-      className={classes.operationInSocket}
-      style={{ ...positionStyle, ...hoverStyle }}
-      onTransitionEnd={props.onTransitionEnd}
-    />
-  );
-};
+    return (
+      <OperationVisualization
+        operation={props.operation}
+        className={classes.operationInSocket}
+        style={{ ...positionStyle, ...hoverStyle }}
+        onTransitionEnd={props.onTransitionEnd}
+      />
+    );
+  };
 
 const useSocketStyles = createUseStyles({
   socket: {

@@ -54,7 +54,7 @@ export const plainTextWithScanningOperationsFunctions: ApplicationSpecificFuncti
   TextOperation
 > = {
   transform(a: TextOperation, b: TextOperation): [TextOperation, TextOperation] {
-    return (TextOperation.transform(a, b) as unknown) as [TextOperation, TextOperation]; // because type definition is wrong
+    return TextOperation.transform(a, b) as unknown as [TextOperation, TextOperation]; // because type definition is wrong
   },
   compose(first: TextOperation, second: TextOperation) {
     return first.compose(second);
