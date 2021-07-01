@@ -10,7 +10,7 @@
     "@types/node": "14.14.43",
     "@types/ot": "0.0.4",
     "@types/react": "17.0.13",
-    "@types/react-dom": "17.0.3",
+    "@types/react-dom": "17.0.8",
     "clsx": "1.1.1",
     "cm-show-invisibles": "3.1.0",
     "codemirror": "5.61.0",
