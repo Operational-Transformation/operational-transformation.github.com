@@ -114,62 +114,64 @@ enum SelfOpenStatus {
 
 export type OperationVisualizationComp<OpT> = FunctionComponent<OperationProps<OpT>>;
 
-export const makeOperationVisualization = <OpT extends unknown>(
-  applicationSpecific: ApplicationSpecificOperationComponents<OpT>,
-): OperationVisualizationComp<OpT> => (props) => {
-  const classes = useOperationStyles();
-  const { className, style, operation, tooltipPlacement, ...otherProps } = props;
+export const makeOperationVisualization =
+  <OpT extends unknown>(
+    applicationSpecific: ApplicationSpecificOperationComponents<OpT>,
+  ): OperationVisualizationComp<OpT> =>
+  (props) => {
+    const classes = useOperationStyles();
+    const { className, style, operation, tooltipPlacement, ...otherProps } = props;
 
-  const [tooltipContent, setTooltipContent] = useState<NonNullable<React.ReactNode>>("");
-  const [selfOpenStatus, setSelfOpenStatus] = useState<SelfOpenStatus>(SelfOpenStatus.Closed);
-  const [hoveredOperation, setHoveredOperation] = useOperationHoverState();
+    const [tooltipContent, setTooltipContent] = useState<NonNullable<React.ReactNode>>("");
+    const [selfOpenStatus, setSelfOpenStatus] = useState<SelfOpenStatus>(SelfOpenStatus.Closed);
+    const [hoveredOperation, setHoveredOperation] = useOperationHoverState();
 
-  useEffect(() => {
-    if (
-      selfOpenStatus === SelfOpenStatus.Closed &&
-      hoveredOperation !== undefined &&
-      isRelated(hoveredOperation, operation)
-    ) {
-      setTooltipContent(renderRelatedOperation(operation, hoveredOperation));
-    } else if (selfOpenStatus === SelfOpenStatus.Closing && hoveredOperation === undefined) {
-      setSelfOpenStatus(SelfOpenStatus.Closed);
-    }
-  }, [selfOpenStatus, hoveredOperation, operation]);
+    useEffect(() => {
+      if (
+        selfOpenStatus === SelfOpenStatus.Closed &&
+        hoveredOperation !== undefined &&
+        isRelated(hoveredOperation, operation)
+      ) {
+        setTooltipContent(renderRelatedOperation(operation, hoveredOperation));
+      } else if (selfOpenStatus === SelfOpenStatus.Closing && hoveredOperation === undefined) {
+        setSelfOpenStatus(SelfOpenStatus.Closed);
+      }
+    }, [selfOpenStatus, hoveredOperation, operation]);
 
-  const onOpen = useCallback(() => {
-    setSelfOpenStatus(SelfOpenStatus.Open);
-    setTooltipContent(renderOperation(applicationSpecific.renderOperation, operation));
-    setHoveredOperation(operation);
-  }, [operation, setHoveredOperation]);
+    const onOpen = useCallback(() => {
+      setSelfOpenStatus(SelfOpenStatus.Open);
+      setTooltipContent(renderOperation(applicationSpecific.renderOperation, operation));
+      setHoveredOperation(operation);
+    }, [operation, setHoveredOperation]);
 
-  const onClose = useCallback(() => {
-    setSelfOpenStatus(hoveredOperation ? SelfOpenStatus.Closing : SelfOpenStatus.Closed);
-    setHoveredOperation(undefined);
-  }, [hoveredOperation, setHoveredOperation]);
+    const onClose = useCallback(() => {
+      setSelfOpenStatus(hoveredOperation ? SelfOpenStatus.Closing : SelfOpenStatus.Closed);
+      setHoveredOperation(undefined);
+    }, [hoveredOperation, setHoveredOperation]);
 
-  const isRelatedOperationHovered =
-    hoveredOperation !== undefined && isRelated(operation, hoveredOperation);
+    const isRelatedOperationHovered =
+      hoveredOperation !== undefined && isRelated(operation, hoveredOperation);
 
-  return (
-    <Tooltip
-      key={operation.meta.id}
-      arrow={true}
-      classes={{ tooltip: classes.tooltip }}
-      title={tooltipContent}
-      open={selfOpenStatus === SelfOpenStatus.Open || isRelatedOperationHovered}
-      placement={tooltipPlacement ?? "bottom"}
-      onOpen={onOpen}
-      onClose={onClose}
-    >
-      <span
+    return (
+      <Tooltip
         key={operation.meta.id}
-        className={clsx(classes.operation, props.className)}
-        style={{
-          background: getClientColor(operation.meta.author),
-          ...style,
-        }}
-        {...otherProps}
-      />
-    </Tooltip>
-  );
-};
+        arrow={true}
+        classes={{ tooltip: classes.tooltip }}
+        title={tooltipContent}
+        open={selfOpenStatus === SelfOpenStatus.Open || isRelatedOperationHovered}
+        placement={tooltipPlacement ?? "bottom"}
+        onOpen={onOpen}
+        onClose={onClose}
+      >
+        <span
+          key={operation.meta.id}
+          className={clsx(classes.operation, props.className)}
+          style={{
+            background: getClientColor(operation.meta.author),
+            ...style,
+          }}
+          {...otherProps}
+        />
+      </Tooltip>
+    );
+  };

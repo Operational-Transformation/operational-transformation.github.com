@@ -142,16 +142,13 @@ function clientUserOperation<SnapshotT, OpT>(
   clientName: ClientName,
 ): ClientAndSocketsVisualizationState<SnapshotT, OpT> {
   const { initialSynchronizationState, clientLog, toServer, fromServer, snapshot } = clientState;
-  const {
-    newSynchronizationState,
-    operationsToSendToServer,
-    newClientLogEntry,
-  } = processClientUserOperation(
-    functions.compose,
-    getLatestSynchronizationState(clientState),
-    baseOperation,
-    clientName,
-  );
+  const { newSynchronizationState, operationsToSendToServer, newClientLogEntry } =
+    processClientUserOperation(
+      functions.compose,
+      getLatestSynchronizationState(clientState),
+      baseOperation,
+      clientName,
+    );
 
   return {
     clientLog: [{ entry: newClientLogEntry, newState: newSynchronizationState }, ...clientLog],
