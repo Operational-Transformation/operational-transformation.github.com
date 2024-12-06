@@ -223,6 +223,8 @@ function transformListAgainstList(
   as: BasicTextOperation[],
   bs: BasicTextOperation[],
 ): [BasicTextOperation[], BasicTextOperation[]] {
+  // console.log("transformListAgainstList AS", as);
+  // console.log("transformListAgainstList BS", bs);
   let currBs = bs;
   const asPrime = as.flatMap((a) => {
     const [aPrimes, bsPrime] = transformSingleAgainstList(a, currBs);
